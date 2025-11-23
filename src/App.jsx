@@ -1,22 +1,20 @@
-import { useState } from "react";
-import Signup from "./Components/Signup.jsx";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Login from "./Components/Login.jsx";
+import Signup from "./Components/Signup.jsx";
+import Dashboard from "./Components/Dashboard.jsx";
 
 
 function App() {
-  const [showLogin, setShowLogin] = useState(true);
-
   return (
-    <div style={{ padding: 20 }}>
-      <h1>AgroConnect</h1>
-
-      <div>
-        <button onClick={() => setShowLogin(true)}>Login</button>
-        <button onClick={() => setShowLogin(false)}>Signup</button>
-      </div>
-
-      {showLogin ? <Login /> : <Signup />}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Router>
   );
 }
 
