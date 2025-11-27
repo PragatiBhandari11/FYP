@@ -4,10 +4,10 @@ const Welcome = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
+    <div style={styles.appContainer}>
+      <div style={styles.card}>
 
-        {/* Title */}
+        {/* App Title */}
         <h1 style={styles.title}>Farmers Market</h1>
 
         {/* Subtitle */}
@@ -15,22 +15,22 @@ const Welcome = () => {
           Bringing the charm of the Nepali market to your fingertips
         </p>
 
-        {/* Main Button */}
+        {/* App Button */}
         <button
-          style={styles.startButton}
+          style={styles.primaryButton}
           onClick={() => navigate("/login")}
         >
-          Let’s get started
+          Let’s Get Started
         </button>
 
-        {/* Footer */}
-        <p style={styles.footer}>
+        {/* Sign-in Link */}
+        <p style={styles.footerText}>
           Already have an account?
           <span
-            style={styles.signIn}
+            style={styles.signInLink}
             onClick={() => navigate("/login")}
           >
-            {" "}Sign in
+            {" "}Sign In
           </span>
         </p>
       </div>
@@ -39,49 +39,63 @@ const Welcome = () => {
 };
 
 const styles = {
-  container: {
+  appContainer: {
     height: "100vh",
+    width: "100vw",
+    backgroundColor: "#F9F5FF",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "white",
-    padding: "20px",
+    padding: 20,
   },
-  content: {
+
+  card: {
+    width: "100%",
+    maxWidth: 380,
+    padding: 25,
     textAlign: "center",
-    width: "100%",
-    maxWidth: "350px",
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
   },
+
   title: {
-    fontSize: "30px",
-    fontWeight: "bold",
+    fontSize: 32,
+    fontWeight: 800,
     color: "#5a2ca0",
+    marginBottom: 10,
   },
+
   subtitle: {
-    marginTop: "10px",
-    marginBottom: "35px",
-    color: "gray",
-    fontSize: "14px",
+    fontSize: 15,
+    color: "#666",
+    marginBottom: 40,
+    paddingHorizontal: 10,
   },
-  startButton: {
+
+  primaryButton: {
     width: "100%",
-    padding: "15px",
-    background: "#6a2ed9",
+    padding: 15,
+    backgroundColor: "#6a2ed9",
     color: "white",
-    borderRadius: "10px",
     border: "none",
-    fontSize: "16px",
+    borderRadius: 12,
+    fontSize: 18,
+    fontWeight: 600,
     cursor: "pointer",
+    marginBottom: 25,
   },
-  footer: {
-    marginTop: "20px",
-    color: "gray",
+
+  footerText: {
+    fontSize: 14,
+    color: "#777",
   },
-  signIn: {
+
+  signInLink: {
     color: "#6a2ed9",
     fontWeight: "bold",
     cursor: "pointer",
-  }
+  },
 };
 
 export default Welcome;

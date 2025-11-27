@@ -11,6 +11,7 @@ const SignUpPage = () => {
     password: "",
     confirmPassword: "",
   });
+
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -28,12 +29,20 @@ const SignUpPage = () => {
     setError("");
 
     alert(`Welcome ${form.fullname}! Your account has been created.`);
-    navigate("/dashboard");
+
+    // ✅ Navigation based on role
+    if (form.role === "Farmer") {
+      navigate("/farmer-dashboard");
+    } else if (form.role === "Expert") {
+      navigate("/expert-dashboard");
+    } else {
+      navigate("/buyer-dashboard");
+    }
   };
 
   return (
     <div style={styles.container}>
-      {/* ✅ Back Button */}
+      {/* Back Button */}
       <button onClick={() => navigate(-1)} style={styles.backButton}>
         ← Back
       </button>
@@ -94,7 +103,7 @@ const SignUpPage = () => {
         </label>
 
         <label style={styles.label}>
-          Role
+          Select Role
           <select
             name="role"
             value={form.role}
@@ -156,7 +165,6 @@ const styles = {
     position: "relative",
   },
 
-  // ✅ Back Button Styling
   backButton: {
     border: "none",
     background: "transparent",
@@ -173,10 +181,12 @@ const styles = {
     fontWeight: "bold",
     fontSize: 24,
   },
+
   form: {
     display: "flex",
     flexDirection: "column",
   },
+
   label: {
     fontSize: 14,
     fontWeight: 600,
@@ -185,6 +195,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
   },
+
   input: {
     marginTop: 6,
     padding: "10px 12px",
@@ -194,11 +205,13 @@ const styles = {
     outline: "none",
     boxSizing: "border-box",
   },
+
   error: {
     color: "red",
     marginBottom: 12,
     fontWeight: "bold",
   },
+
   signUpButton: {
     backgroundColor: "#6a3cc9",
     color: "#fff",
