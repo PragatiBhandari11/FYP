@@ -20,13 +20,12 @@ const SignUpPage = () => {
 
   const handleSignUp = (e) => {
     e.preventDefault();
-    // Password confirmation check
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
     setError("");
-    // Here you would normally send form data to backend API
 
     alert(`Welcome ${form.fullname}! Your account has been created.`);
     navigate("/dashboard");
@@ -34,6 +33,11 @@ const SignUpPage = () => {
 
   return (
     <div style={styles.container}>
+      {/* ✅ Back Button */}
+      <button onClick={() => navigate(-1)} style={styles.backButton}>
+        ← Back
+      </button>
+
       <h2 style={styles.greeting}>Create your account</h2>
 
       <form onSubmit={handleSignUp} style={styles.form}>
@@ -149,7 +153,20 @@ const styles = {
     background: "#fff",
     borderRadius: 12,
     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+    position: "relative",
   },
+
+  // ✅ Back Button Styling
+  backButton: {
+    border: "none",
+    background: "transparent",
+    color: "#6a3cc9",
+    fontSize: 16,
+    fontWeight: "600",
+    cursor: "pointer",
+    marginBottom: 10,
+  },
+
   greeting: {
     color: "#6a3cc9",
     marginBottom: 20,
