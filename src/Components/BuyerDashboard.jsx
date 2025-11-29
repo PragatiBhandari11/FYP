@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 export default function BuyerDashboard() {
-  // Sample products & farmers data
   const productsData = [
     {
       id: 1,
@@ -38,40 +37,23 @@ export default function BuyerDashboard() {
     },
   ];
 
-  // State for search/filter
   const [searchTerm, setSearchTerm] = useState("");
-
-  // State for cart items (basic)
   const [cart, setCart] = useState([]);
-
-  // State to handle chat modal
-  const [chatOpenFor, setChatOpenFor] = useState(null); // farmerId or null
-
-  // State to handle demand alert modal
-  const [demandOpenFor, setDemandOpenFor] = useState(null); // farmerId or null
-
-  // Messages per farmer: { farmerId: [{sender, text, time}, ...] }
+  const [chatOpenFor, setChatOpenFor] = useState(null);
   const [messages, setMessages] = useState({});
-
-  // Demand alerts sent (just store for demo)
   const [demandAlerts, setDemandAlerts] = useState({});
-
-  // State to toggle between "products" and "profile"
   const [activeTab, setActiveTab] = useState("products");
 
-  // Filter products by search term
-  const filteredProducts = productsData.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = productsData.filter((p) =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Add product to cart
   const addToCart = (product) => {
     if (!cart.find((item) => item.id === product.id)) {
       setCart([...cart, product]);
     }
   };
 
-  // Send chat message
   const sendMessage = (farmerId, text) => {
     if (!text.trim()) return;
     const newMsg = {
@@ -81,44 +63,36 @@ export default function BuyerDashboard() {
     };
     setMessages((prev) => {
       const prevMsgs = prev[farmerId] || [];
-      return {
-        ...prev,
-        [farmerId]: [...prevMsgs, newMsg],
-      };
+      return { ...prev, [farmerId]: [...prevMsgs, newMsg] };
     });
   };
 
-  // Send demand alert
-  const sendDemandAlert = (farmerId, demandText) => {
-    if (!demandText.trim()) return;
-    const newAlert = {
-      text: demandText.trim(),
-      time: new Date().toLocaleString(),
-    };
+  const sendDemandAlert = (farmerId, text) => {
+    if (!text.trim()) return;
+    const newAlert = { text: text.trim(), time: new Date().toLocaleString() };
     setDemandAlerts((prev) => {
       const prevAlerts = prev[farmerId] || [];
-      return {
-        ...prev,
-        [farmerId]: [...prevAlerts, newAlert],
-      };
+      return { ...prev, [farmerId]: [...prevAlerts, newAlert] };
     });
   };
+
+  // Chat list data for Chat tab
+  const chatList = productsData.filter((p) => messages[p.farmerId]);
 
   return (
     <>
       <style>{`
         .buyer-dashboard {
           font-family: Arial, sans-serif;
-          padding: 20px 20px 80px 20px; /* padding bottom for nav */
-          background: #f5f9f7;
+          padding: 20px 20px 80px 20px;
+          background: #f3f0fa;
           min-height: 100vh;
-          color: #245c2a;
+          color: #3e1f7a;
           position: relative;
-          box-sizing: border-box;
         }
         h1 {
           text-align: center;
-          color: #2e7d32;
+          color: #6a3cc9;
           margin-bottom: 25px;
           letter-spacing: 1px;
         }
@@ -132,13 +106,12 @@ export default function BuyerDashboard() {
           max-width: 400px;
           padding: 10px 15px;
           border-radius: 25px;
-          border: 1.5px solid #4caf50;
+          border: 1.5px solid #6a3cc9;
           font-size: 16px;
           outline: none;
-          transition: box-shadow 0.3s ease;
         }
         .search-input:focus {
-          box-shadow: 0 0 8px #4caf50aa;
+          box-shadow: 0 0 8px #6a3cc9aa;
         }
         .products-grid {
           display: grid;
@@ -149,16 +122,10 @@ export default function BuyerDashboard() {
           background: white;
           border-radius: 15px;
           padding: 15px;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
           display: flex;
           flex-direction: column;
           align-items: center;
-          transition: transform 0.2s ease;
-        }
-        .product-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-          cursor: default;
         }
         .product-image {
           width: 100%;
@@ -171,12 +138,12 @@ export default function BuyerDashboard() {
           font-weight: bold;
           font-size: 18px;
           margin-bottom: 6px;
-          color: #2e7d32;
+          color: #6a3cc9;
           text-align: center;
         }
         .product-price {
           font-size: 16px;
-          color: #4caf50;
+          color: #9b59b6;
           margin-bottom: 8px;
         }
         .product-seller {
@@ -192,7 +159,7 @@ export default function BuyerDashboard() {
           justify-content: center;
         }
         button {
-          background-color: #4caf50;
+          background-color: #6a3cc9;
           color: white;
           border: none;
           border-radius: 25px;
@@ -200,41 +167,40 @@ export default function BuyerDashboard() {
           font-size: 14px;
           font-weight: bold;
           cursor: pointer;
-          transition: background-color 0.3s ease;
           flex: 1;
         }
         button:hover {
-          background-color: #388e3c;
+          background-color: #592bb5;
         }
         button:disabled {
-          background-color: #a5d6a7;
+          background-color: #b29ddb;
           cursor: not-allowed;
         }
         .cart-preview {
           position: fixed;
           right: 20px;
           bottom: 130px;
-          background: #fff;
+          background: white;
           border-radius: 15px;
           box-shadow: 0 6px 12px rgba(0,0,0,0.1);
           padding: 15px 20px;
           width: 280px;
           max-height: 300px;
           overflow-y: auto;
-          color: #2e7d32;
+          color: #3e1f7a;
           font-weight: 600;
           z-index: 900;
         }
         .cart-preview h3 {
           margin-bottom: 10px;
           font-size: 18px;
-          border-bottom: 1px solid #4caf50;
+          border-bottom: 1px solid #6a3cc9;
           padding-bottom: 8px;
         }
         .cart-item {
           margin-bottom: 8px;
           font-size: 14px;
-          border-bottom: 1px dotted #4caf50;
+          border-bottom: 1px dotted #6a3cc9;
           padding-bottom: 4px;
         }
         .cart-empty {
@@ -243,105 +209,29 @@ export default function BuyerDashboard() {
           font-style: italic;
           text-align: center;
         }
-        /* Chat Modal */
-        .modal-overlay {
-          position: fixed;
-          top: 0; left: 0; right:0; bottom:0;
-          background: rgba(0,0,0,0.4);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        .modal {
+        .profile-page {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 15px;
           background: white;
-          width: 90%;
-          max-width: 400px;
           border-radius: 15px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-          display: flex;
-          flex-direction: column;
-          max-height: 80vh;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .modal-header {
-          padding: 15px 20px;
-          background: #4caf50;
-          color: white;
-          font-weight: bold;
-          font-size: 18px;
-          border-top-left-radius: 15px;
-          border-top-right-radius: 15px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
+        .profile-page h2 {
+          text-align: center;
+          color: #6a3cc9;
+          margin-bottom: 20px;
         }
-        .modal-close-btn {
-          background: transparent;
-          border: none;
-          color: white;
-          font-size: 24px;
-          cursor: pointer;
-          line-height: 1;
+        .profile-item {
+          font-size: 16px;
+          margin-bottom: 12px;
+          color: #3e1f7a;
         }
-        .modal-body {
-          padding: 10px 20px;
-          overflow-y: auto;
-          flex-grow: 1;
-          background: #eaf6ea;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .chat-message {
-          background: white;
-          padding: 8px 12px;
-          border-radius: 12px;
-          max-width: 80%;
-          font-size: 14px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-          word-break: break-word;
-        }
-        .chat-message.buyer {
-          align-self: flex-end;
-          background: #c8e6c9;
-        }
-        .chat-message.farmer {
-          align-self: flex-start;
-          background: #fff;
-        }
-        .modal-footer {
-          padding: 10px 15px;
-          border-top: 1px solid #ddd;
-          display: flex;
-          gap: 10px;
-        }
-        .modal-input {
-          flex-grow: 1;
-          padding: 8px 12px;
-          border-radius: 20px;
-          border: 1px solid #4caf50;
-          font-size: 14px;
-          outline: none;
-        }
-        .modal-send-btn {
-          background-color: #4caf50;
-          color: white;
-          border: none;
-          border-radius: 20px;
-          padding: 8px 16px;
-          font-weight: bold;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-        }
-        .modal-send-btn:hover {
-          background-color: #388e3c;
-        }
-        /* Demand alert textarea */
         .demand-textarea {
           width: 100%;
           height: 80px;
           border-radius: 12px;
-          border: 1px solid #4caf50;
+          border: 1px solid #6a3cc9;
           padding: 10px;
           resize: none;
           font-size: 14px;
@@ -349,42 +239,18 @@ export default function BuyerDashboard() {
         }
         .demand-send-btn {
           margin-top: 10px;
-          background-color: #4caf50;
+          background-color: #6a3cc9;
           color: white;
           border: none;
           border-radius: 20px;
           padding: 10px 20px;
           font-weight: bold;
           cursor: pointer;
-          transition: background-color 0.3s ease;
         }
         .demand-send-btn:hover {
-          background-color: #388e3c;
+          background-color: #592bb5;
         }
-        .alert-info {
-          font-size: 13px;
-          color: #2e7d32;
-          font-style: italic;
-          margin-top: 6px;
-        }
-        /* Responsive */
-        @media (max-width: 480px) {
-          .cart-preview {
-            width: 90vw;
-            right: 5%;
-            bottom: 130px;
-          }
-          .modal {
-            width: 95%;
-            max-height: 90vh;
-          }
-          .bottom-nav {
-            width: 100%;
-            bottom: 0;
-            left: 0;
-          }
-        }
-        /* Bottom navigation bar */
+        /* Bottom navigation */
         .bottom-nav {
           position: fixed;
           bottom: 0;
@@ -401,43 +267,65 @@ export default function BuyerDashboard() {
         .bottom-nav button {
           background: none;
           border: none;
-          color: #4caf50;
+          color: #6a3cc9;
           font-weight: bold;
           font-size: 14px;
           cursor: pointer;
           flex-grow: 1;
           padding: 6px 0;
-          transition: background-color 0.3s ease;
-          outline: none;
         }
         .bottom-nav button:hover,
         .bottom-nav button.active {
-          background-color: #e0f2e9;
-          color: #2e7d32;
+          background-color: #e5dbf7;
+          color: #3e1f7a;
         }
-        .profile-page {
+        /* Chat List */
+        .chat-list {
           max-width: 600px;
           margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .chat-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           padding: 10px 15px;
           background: white;
-          border-radius: 15px;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          border-radius: 12px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          cursor: pointer;
         }
-        .profile-page h2 {
-          text-align: center;
-          color: #2e7d32;
-          margin-bottom: 20px;
+        .chat-item:hover {
+          background-color: #f0e5fc;
         }
-        .profile-item {
-          font-size: 16px;
-          margin-bottom: 12px;
-          color: #245c2a;
+        .chat-item .name-time {
+          display: flex;
+          flex-direction: column;
+        }
+        .chat-item .name-time .name {
+          font-weight: bold;
+          color: #6a3cc9;
+        }
+        .chat-item .name-time .time {
+          font-size: 12px;
+          color: #888;
+        }
+        .chat-item .last-msg {
+          max-width: 150px;
+          font-size: 13px;
+          color: #555;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
         }
       `}</style>
 
       <div className="buyer-dashboard">
-        <h1>Welcome to Buyer Dashboard</h1>
+        <h1>Expert Buyer Dashboard</h1>
 
+        {/* PRODUCTS TAB */}
         {activeTab === "products" && (
           <>
             <div className="search-box">
@@ -447,82 +335,48 @@ export default function BuyerDashboard() {
                 placeholder="Search crops by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="Search crops"
               />
             </div>
-
             <div className="products-grid">
               {filteredProducts.length ? (
-                filteredProducts.map(
-                  ({
-                    id,
-                    name,
-                    price,
-                    unit,
-                    seller,
-                    location,
-                    farmerId,
-                    image,
-                  }) => (
-                    <div
-                      key={id}
-                      className="product-card"
-                      tabIndex={0}
-                      aria-label={`Product: ${name}, sold by ${seller}`}
-                    >
-                      <img src={image} alt={name} className="product-image" />
-                      <div className="product-name">{name}</div>
-                      <div className="product-price">
-                        Rs. {price} / {unit}
-                      </div>
-                      <div className="product-seller">
-                        Seller: {seller} <br />
-                        Location: {location}
-                      </div>
-                      <div className="btns-group">
-                        <button
-                          onClick={() => addToCart({ id, name, price, unit })}
-                          disabled={cart.find((item) => item.id === id)}
-                          aria-disabled={cart.find((item) => item.id === id)}
-                          aria-label={`Add ${name} to cart`}
-                        >
-                          {cart.find((item) => item.id === id)
-                            ? "Added to Cart"
-                            : "Add to Cart"}
-                        </button>
-                        <button
-                          onClick={() => setChatOpenFor(farmerId)}
-                          aria-label={`Chat with ${seller}`}
-                        >
-                          Chat
-                        </button>
-                        <button
-                          onClick={() => setDemandOpenFor(farmerId)}
-                          aria-label={`Send demand alert to ${seller}`}
-                        >
-                          Demand Alert
-                        </button>
-                      </div>
+                filteredProducts.map((p) => (
+                  <div key={p.id} className="product-card">
+                    <img src={p.image} alt={p.name} className="product-image" />
+                    <div className="product-name">{p.name}</div>
+                    <div className="product-price">
+                      Rs. {p.price} / {p.unit}
                     </div>
-                  )
-                )
+                    <div className="product-seller">
+                      Seller: {p.seller} <br /> Location: {p.location}
+                    </div>
+                    <div className="btns-group">
+                      <button
+                        onClick={() =>
+                          addToCart({ id: p.id, name: p.name, price: p.price, unit: p.unit })
+                        }
+                        disabled={cart.find((item) => item.id === p.id)}
+                      >
+                        {cart.find((item) => item.id === p.id)
+                          ? "Added"
+                          : "Add to Cart"}
+                      </button>
+                      <button onClick={() => setChatOpenFor(p.farmerId)}>Chat</button>
+                    </div>
+                  </div>
+                ))
               ) : (
-                <p>No products found matching "{searchTerm}".</p>
+                <p>No products found "{searchTerm}"</p>
               )}
             </div>
 
-            <div
-              className="cart-preview"
-              aria-live="polite"
-              aria-label="Shopping cart preview"
-            >
+            <div className="cart-preview">
               <h3>Your Cart ({cart.length})</h3>
               {cart.length === 0 ? (
                 <p className="cart-empty">Your cart is empty.</p>
               ) : (
-                cart.map(({ id, name, price, unit }) => (
-                  <div key={id} className="cart-item">
-                    {name} - Rs. {price} / {unit}
+                cart.map((c) => (
+                  <div key={c.id} className="cart-item">
+                    {c.name} - Rs. {c.price} / {c.unit}
                   </div>
                 ))
               )}
@@ -530,13 +384,49 @@ export default function BuyerDashboard() {
           </>
         )}
 
+        {/* CHAT TAB */}
+        {activeTab === "chat" && (
+          <div className="chat-list">
+            {chatList.length === 0 ? (
+              <p>No chats yet. Start a conversation from Products tab.</p>
+            ) : (
+              chatList.map((f) => {
+                const msgs = messages[f.farmerId];
+                const lastMsg = msgs[msgs.length - 1];
+                return (
+                  <div
+                    key={f.farmerId}
+                    className="chat-item"
+                    onClick={() => setChatOpenFor(f.farmerId)}
+                  >
+                    <div className="name-time">
+                      <span className="name">{f.seller}</span>
+                      <span className="time">{lastMsg.time}</span>
+                    </div>
+                    <div className="last-msg">{lastMsg.text}</div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* PROFILE TAB */}
         {activeTab === "profile" && (
-          <div className="profile-page" role="region" aria-label="User profile">
+          <div className="profile-page">
             <h2>Your Profile</h2>
             <div className="profile-item"><strong>Name:</strong> Buyer User</div>
             <div className="profile-item"><strong>Email:</strong> buyer@example.com</div>
             <div className="profile-item"><strong>Phone:</strong> +977-9876543210</div>
             <div className="profile-item"><strong>Address:</strong> Kathmandu, Nepal</div>
+
+            {/* DEMAND ALERT */}
+            <h3 style={{ color: "#6a3cc9", marginTop: 20 }}>Send Demand Alert</h3>
+            <DemandAlertProfile
+              products={productsData}
+              sendDemandAlert={sendDemandAlert}
+              previousAlerts={demandAlerts}
+            />
           </div>
         )}
 
@@ -544,47 +434,29 @@ export default function BuyerDashboard() {
         {chatOpenFor && (
           <ChatModal
             farmerId={chatOpenFor}
-            farmerName={
-              productsData.find((p) => p.farmerId === chatOpenFor)?.seller ||
-              "Farmer"
-            }
+            farmerName={productsData.find((p) => p.farmerId === chatOpenFor)?.seller || "Farmer"}
             messages={messages[chatOpenFor] || []}
             onClose={() => setChatOpenFor(null)}
             onSend={(msg) => sendMessage(chatOpenFor, msg)}
           />
         )}
 
-        {/* DEMAND ALERT MODAL */}
-        {demandOpenFor && (
-          <DemandAlertModal
-            farmerId={demandOpenFor}
-            farmerName={
-              productsData.find((p) => p.farmerId === demandOpenFor)?.seller ||
-              "Farmer"
-            }
-            onClose={() => setDemandOpenFor(null)}
-            onSend={(msg) => {
-              sendDemandAlert(demandOpenFor, msg);
-              alert("Demand alert sent!");
-              setDemandOpenFor(null);
-            }}
-            previousAlerts={demandAlerts[demandOpenFor] || []}
-          />
-        )}
-
-        {/* Bottom Navigation */}
-        <nav className="bottom-nav" aria-label="Main navigation tabs">
+        <nav className="bottom-nav">
           <button
-            onClick={() => setActiveTab("products")}
             className={activeTab === "products" ? "active" : ""}
-            aria-current={activeTab === "products" ? "page" : undefined}
+            onClick={() => setActiveTab("products")}
           >
             Products
           </button>
           <button
-            onClick={() => setActiveTab("profile")}
+            className={activeTab === "chat" ? "active" : ""}
+            onClick={() => setActiveTab("chat")}
+          >
+            Chat
+          </button>
+          <button
             className={activeTab === "profile" ? "active" : ""}
-            aria-current={activeTab === "profile" ? "page" : undefined}
+            onClick={() => setActiveTab("profile")}
           >
             Profile
           </button>
@@ -594,49 +466,31 @@ export default function BuyerDashboard() {
   );
 }
 
-// Chat modal component
+// CHAT MODAL
 function ChatModal({ farmerId, farmerName, messages, onClose, onSend }) {
   const [input, setInput] = useState("");
-
   const handleSend = () => {
-    if (input.trim()) {
-      onSend(input);
-      setInput("");
-    }
+    if (!input.trim()) return;
+    onSend(input);
+    setInput("");
   };
-
   return (
-    <div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Chat with ${farmerName}`}
-    >
+    <div className="modal-overlay" role="dialog" aria-modal="true">
       <div className="modal">
         <header className="modal-header">
           Chat with {farmerName}
-          <button
-            className="modal-close-btn"
-            aria-label="Close chat"
-            onClick={onClose}
-          >
+          <button className="modal-close-btn" onClick={onClose}>
             &times;
           </button>
         </header>
         <main className="modal-body">
           {messages.length === 0 ? (
-            <p>No messages yet. Say hello!</p>
+            <p>No messages yet</p>
           ) : (
-            messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`chat-message ${msg.sender}`}
-                aria-label={`${msg.sender} said at ${msg.time}`}
-              >
-                {msg.text} <br />
-                <small style={{ fontSize: "10px", opacity: 0.6 }}>
-                  {msg.time}
-                </small>
+            messages.map((m, i) => (
+              <div key={i} className={`chat-message ${m.sender}`}>
+                {m.text} <br />
+                <small>{m.time}</small>
               </div>
             ))
           )}
@@ -645,93 +499,63 @@ function ChatModal({ farmerId, farmerName, messages, onClose, onSend }) {
           <input
             className="modal-input"
             type="text"
-            placeholder="Write a message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            aria-label="Write message input"
           />
-          <button
-            className="modal-send-btn"
-            onClick={handleSend}
-            aria-label="Send message"
-          >
-            Send
-          </button>
+          <button className="modal-send-btn" onClick={handleSend}>Send</button>
         </footer>
       </div>
     </div>
   );
 }
 
-// Demand alert modal component
-function DemandAlertModal({
-  farmerId,
-  farmerName,
-  onClose,
-  onSend,
-  previousAlerts,
-}) {
+// DEMAND ALERT COMPONENT IN PROFILE
+function DemandAlertProfile({ products, sendDemandAlert, previousAlerts }) {
+  const [selectedFarmer, setSelectedFarmer] = useState(products[0]?.farmerId || null);
   const [demandText, setDemandText] = useState("");
 
   return (
-    <div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Send demand alert to ${farmerName}`}
-    >
-      <div className="modal" style={{ maxHeight: "70vh" }}>
-        <header className="modal-header">
-          Demand Alert to {farmerName}
-          <button
-            className="modal-close-btn"
-            aria-label="Close demand alert"
-            onClick={onClose}
-          >
-            &times;
-          </button>
-        </header>
-        <main className="modal-body">
-          <textarea
-            className="demand-textarea"
-            placeholder="Write your demand alert here..."
-            value={demandText}
-            onChange={(e) => setDemandText(e.target.value)}
-            aria-label="Demand alert text"
-          />
-          <button
-            className="demand-send-btn"
-            onClick={() => {
-              if (demandText.trim()) {
-                onSend(demandText);
-                setDemandText("");
-              } else {
-                alert("Please enter a demand alert message.");
-              }
-            }}
-            aria-label="Send demand alert"
-          >
-            Send Demand Alert
-          </button>
+    <>
+      <select
+        style={{ padding: 8, borderRadius: 12, border: "1px solid #6a3cc9", marginBottom: 10 }}
+        value={selectedFarmer}
+        onChange={(e) => setSelectedFarmer(Number(e.target.value))}
+      >
+        {products.map((p) => (
+          <option key={p.farmerId} value={p.farmerId}>
+            {p.seller} ({p.name})
+          </option>
+        ))}
+      </select>
+      <textarea
+        className="demand-textarea"
+        placeholder="Write demand alert..."
+        value={demandText}
+        onChange={(e) => setDemandText(e.target.value)}
+      />
+      <button
+        className="demand-send-btn"
+        onClick={() => {
+          if (!demandText.trim()) return alert("Enter message");
+          sendDemandAlert(selectedFarmer, demandText);
+          setDemandText("");
+          alert("Demand alert sent!");
+        }}
+      >
+        Send Demand Alert
+      </button>
 
-          {previousAlerts.length > 0 && (
-            <div className="alert-info" aria-live="polite" style={{ marginTop: 15 }}>
-              <strong>Previous alerts sent:</strong>
-              <ul style={{ marginTop: 8, paddingLeft: 20 }}>
-                {previousAlerts.map((alert, i) => (
-                  <li key={i}>
-                    {alert.text} <br />
-                    <small style={{ fontSize: "10px", opacity: 0.6 }}>
-                      {alert.time}
-                    </small>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+      {previousAlerts[selectedFarmer]?.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <strong>Previous Alerts:</strong>
+          <ul>
+            {previousAlerts[selectedFarmer].map((a, i) => (
+              <li key={i}>{a.text} <small>({a.time})</small></li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
   );
 }
