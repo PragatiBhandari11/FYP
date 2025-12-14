@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import  MarketplacePage from "./MarketplacePage";
+import  WeatherInfoPage from "./WeatherInfoPage";
 
 export default function FarmerDashboard() {
   const [posts, setPosts] = useState([]);
