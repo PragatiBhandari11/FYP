@@ -227,7 +227,7 @@ export default function BuyerDashboard() {
             <span>Cart</span>
           </div>
 
-          <div className="nav-item">
+          <div className="nav-item" onClick={() => navigate("/buyer-orders")}>
             <span className="icon">📦</span>
             <span>Orders</span>
           </div>

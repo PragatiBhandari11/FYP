@@ -9,6 +9,10 @@ import BuyerDashboard from "./Components/BuyerDashboard";
 import ExpertDashboard from "./Components/ExpertDashboard";
 import ExplorePage from "./Components/ExplorePage";
 import CartPage from "./Components/CartPage";
+import OrdersPage from "./Components/OrdersPage";
+
+
+
 
 
 
@@ -28,6 +32,7 @@ function App() {
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/buyer-cart" element={<CartPage />} />
+        <Route path="/buyer-orders" element={<OrdersPage />} />
         
 
         {/* Buyer Explore */}

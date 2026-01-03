@@ -194,7 +194,7 @@ export default function CartPage() {
           <div className="nav-item" onClick={() => navigate("/buyer-dashboard")}>🏠<br/>Home</div>
           <div className="nav-item" onClick={() => navigate("/buyer-explore")}>🔍<br/>Explore</div>
           <div className="nav-item active">🛒<br/>Cart</div>
-          <div className="nav-item">📦<br/>Orders</div>
+          <div className="nav-item" onClick={() => navigate("/buyer-orders")}>📦<br/>Orders</div>
           <div className="nav-item">👤<br/>Profile</div>
         </div>
       </div>
