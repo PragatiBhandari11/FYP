@@ -6,7 +6,7 @@ export default function FarmerDashboard() {
       <style>{`
         * {
           box-sizing: border-box;
-          font-family: Arial, sans-serif;
+          font-family: "Segoe UI", Arial, sans-serif;
         }
 
         body {
@@ -15,32 +15,32 @@ export default function FarmerDashboard() {
         }
 
         .dashboard {
-          max-width: 400px;
+          max-width: 390px;
           margin: auto;
           background: #f4fbf8;
           min-height: 100vh;
-          padding-bottom: 70px;
+          padding-bottom: 90px;
         }
 
         /* Header */
         .header {
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 12px;
           padding: 16px;
-          background: #e7f5ef;
+        }
+
+        .user {
+          display: flex;
+          gap: 10px;
+          align-items: center;
         }
 
         .avatar {
-          width: 48px;
-          height: 48px;
+          width: 46px;
+          height: 46px;
           border-radius: 50%;
-          background: #4caf50;
-        }
-
-        .header h2 {
-          margin: 0;
-          font-size: 18px;
+          background: url("https://i.pravatar.cc/100") center/cover;
         }
 
         .verified {
@@ -48,80 +48,104 @@ export default function FarmerDashboard() {
           color: green;
         }
 
+        .bell {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
         /* Stats */
         .stats {
           display: flex;
-          justify-content: space-around;
-          padding: 14px;
+          gap: 10px;
+          padding: 0 16px;
         }
 
-        .stat-box {
+        .stat {
+          flex: 1;
           background: white;
-          width: 30%;
           padding: 12px;
-          border-radius: 12px;
-          text-align: center;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+          border-radius: 14px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06);
         }
 
-        .stat-box h3 {
+        .stat p {
           margin: 0;
-        }
-
-        .stat-box p {
-          margin: 4px 0 0;
           font-size: 12px;
           color: gray;
+        }
+
+        .stat h4 {
+          margin: 6px 0;
+        }
+
+        .stat small {
+          font-size: 11px;
+          color: green;
         }
 
         /* Actions */
         .actions {
           display: flex;
-          justify-content: space-around;
-          margin: 10px 0;
+          justify-content: space-between;
+          padding: 16px;
         }
 
         .action {
-          width: 75px;
-          height: 75px;
+          width: 70px;
+          height: 70px;
           background: white;
-          border-radius: 15px;
+          border-radius: 16px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           font-size: 12px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06);
         }
 
-        .action span {
-          margin-top: 6px;
+        .action-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: #e8f6ee;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 6px;
+          color: #2e8b57;
+          font-weight: bold;
         }
 
         /* Cards */
-        .info-cards {
+        .cards {
           display: flex;
-          gap: 10px;
-          padding: 10px;
+          gap: 12px;
+          padding: 0 16px;
         }
 
         .card {
           flex: 1;
           padding: 14px;
-          border-radius: 15px;
+          border-radius: 16px;
         }
 
         .price-card {
+          background: white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .tag {
           background: #e8f6ee;
-        }
-
-        .price-card h3 {
-          margin: 6px 0;
-        }
-
-        .price-card span {
-          font-size: 12px;
           color: green;
+          font-size: 11px;
+          padding: 4px 8px;
+          border-radius: 8px;
         }
 
         .weather-card {
@@ -130,30 +154,33 @@ export default function FarmerDashboard() {
         }
 
         /* Orders */
-        .orders {
-          padding: 10px;
-        }
-
-        .orders h3 {
-          margin-bottom: 10px;
+        .section {
+          padding: 16px;
         }
 
         .order {
           background: white;
-          padding: 12px;
-          border-radius: 15px;
-          margin-bottom: 10px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+          border-radius: 16px;
+          padding: 10px;
+          margin-bottom: 12px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06);
         }
 
-        .order h4 {
-          margin: 0;
+        .order-top {
+          display: flex;
+          gap: 10px;
         }
 
-        .order p {
-          margin: 4px 0;
-          font-size: 13px;
-          color: gray;
+        .order img {
+          width: 48px;
+          height: 48px;
+          border-radius: 10px;
+          object-fit: cover;
+        }
+
+        .price {
+          color: green;
+          font-weight: bold;
         }
 
         .order-actions {
@@ -164,107 +191,160 @@ export default function FarmerDashboard() {
 
         .reject {
           flex: 1;
-          padding: 8px;
-          border-radius: 10px;
           border: none;
-          background: #eee;
-          cursor: pointer;
+          background: #f1f1f1;
+          border-radius: 10px;
+          padding: 8px;
         }
 
         .accept {
           flex: 1;
-          padding: 8px;
-          border-radius: 10px;
           border: none;
-          background: #2e7d32;
+          background: #2e8b57;
           color: white;
-          cursor: pointer;
+          border-radius: 10px;
+          padding: 8px;
         }
 
-        /* Bottom Navigation */
+        /* Collaborations */
+        .collabs {
+          display: flex;
+          gap: 12px;
+          overflow-x: auto;
+        }
+
+        .hotel {
+          min-width: 140px;
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .hotel img {
+          width: 100%;
+          height: 90px;
+          object-fit: cover;
+          border-radius: 16px 16px 0 0;
+        }
+
+        .hotel p {
+          margin: 8px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        /* Bottom Nav */
         .bottom-nav {
           position: fixed;
           bottom: 0;
           width: 100%;
-          max-width: 400px;
+          max-width: 390px;
           background: white;
-          border-top: 1px solid #ddd;
           display: flex;
           justify-content: space-around;
-          padding: 10px 0;
+          padding: 12px 0;
+          border-top: 1px solid #ddd;
         }
 
-        .bottom-nav span {
-          font-size: 12px;
-          color: gray;
+        .nav-item {
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          color: #7a7a7a;
+        }
+
+        .nav-item.active {
+          background: #e8f6ee;
+          color: #2e8b57;
         }
       `}</style>
 
       <div className="dashboard">
         {/* Header */}
         <div className="header">
-          <div className="avatar"></div>
-          <div>
-            <h2>Hello, Rajesh</h2>
-            <div className="verified">✔ Verified Farmer</div>
+          <div className="user">
+            <div className="avatar"></div>
+            <div>
+              <h3>Hello, Rajesh</h3>
+              <div className="verified">Verified Farmer</div>
+            </div>
           </div>
+          <div className="bell">🔔</div>
         </div>
 
         {/* Stats */}
         <div className="stats">
-          <div className="stat-box">
-            <h3>$4,250</h3>
+          <div className="stat">
             <p>Earnings</p>
+            <h4>Rs 4,250</h4>
+            <small>+12%</small>
           </div>
-          <div className="stat-box">
-            <h3>18</h3>
+          <div className="stat">
             <p>Orders</p>
+            <h4>18</h4>
+            <small style={{ color: "orange" }}>Pending</small>
           </div>
-          <div className="stat-box">
-            <h3>24</h3>
+          <div className="stat">
             <p>Products</p>
+            <h4>24</h4>
+            <small>Listed</small>
           </div>
         </div>
 
         {/* Actions */}
         <div className="actions">
-          <div className="action">➕<span>Add Product</span></div>
-          <div className="action">📦<span>Orders</span></div>
-          <div className="action">🚜<span>My Farm</span></div>
-          <div className="action">👨‍🌾<span>Add Expert</span></div>
+          <div className="action"><div className="action-icon">+</div>Add Product</div>
+          <div className="action"><div className="action-icon">📦</div>View Orders</div>
+          <div className="action"><div className="action-icon">🚜</div>My Farm</div>
+          <div className="action"><div className="action-icon">👤</div>Add Expert</div>
         </div>
 
-        {/* Info Cards */}
-        <div className="info-cards">
+        {/* Cards */}
+        <div className="cards">
           <div className="card price-card">
             <p>Wheat Price</p>
-            <h3>$340 / ton</h3>
-            <span>High Demand</span>
+            <h3>Rs 340 / ton</h3>
+            <span className="tag">High Demand</span>
           </div>
-
           <div className="card weather-card">
             <p>Today</p>
             <h3>24°C</h3>
-            <span>Partly Cloudy</span>
+            <small>Partly Cloudy</small>
           </div>
         </div>
 
         {/* Orders */}
-        <div className="orders">
-          <h3>Recent Orders</h3>
+        <div className="section">
+          <h4>Recent Orders</h4>
 
-          <div className="order">
-            <h4>Fresh Potatoes</h4>
-            <p>50 kg • $120</p>
+          {/* <div className="order">
+            <div className="order-top">
+              <img src="https://images.unsplash.com/photo-1582515073490-dc84c84c0c8b" />
+              <div>
+                <h5>Fresh Potatoes</h5>
+                <small>50 kg • Order #2049</small>
+                <div className="price">Rs 120.00</div>
+              </div>
+            </div>
             <div className="order-actions">
               <button className="reject">Reject</button>
               <button className="accept">Accept</button>
             </div>
-          </div>
+          </div> */}
 
           <div className="order">
-            <h4>Red Tomatoes</h4>
-            <p>30 kg • $85.50</p>
+            <div className="order-top">
+              <img src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce" />
+              <div>
+                <h5>Red Tomatoes</h5>
+                <small>30 kg • Order #2048</small>
+                <div className="price">Rs 85.50</div>
+              </div>
+            </div>
             <div className="order-actions">
               <button className="reject">Reject</button>
               <button className="accept">Accept</button>
@@ -272,13 +352,32 @@ export default function FarmerDashboard() {
           </div>
         </div>
 
-        {/* Bottom Navigation */}
+        {/* Collaborations */}
+        <div className="section">
+          <h4>Collaborations</h4>
+          <div className="collabs">
+            <div className="hotel">
+              <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de" />
+              <p>Green Valley Hotel</p>
+            </div>
+            <div className="hotel">
+              <img src="https://images.unsplash.com/photo-1544025162-d76694265947" />
+              <p>The Fresh Table</p>
+            </div>
+            <div className="hotel">
+              <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9" />
+              <p>Urban Kitchen</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Nav */}
         <div className="bottom-nav">
-          <span>Home</span>
-          <span>Products</span>
-          <span>Experts</span>
-          <span>Calendar</span>
-          <span>Profile</span>
+          <div className="nav-item active">🏠</div>
+          <div className="nav-item">📦</div>
+          <div className="nav-item">👨‍🌾</div>
+          <div className="nav-item">📅</div>
+          <div className="nav-item">👤</div>
         </div>
       </div>
     </>
