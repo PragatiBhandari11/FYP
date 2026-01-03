@@ -1,32 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function FarmerDashboard() {
-  const [weather, setWeather] = useState(null);
-
-  // Fetch weather for Chicago (example)
-  useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const apiKey = "YOUR_API_KEY_HERE"; // Replace with your OpenWeather API key
-        const city = "Chicago";
-        const res = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
-        );
-        const data = await res.json();
-        if (data?.main) {
-          setWeather({
-            temp: Math.round(data.main.temp),
-            description: data.weather[0].description,
-            icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
-            city: data.name,
-          });
-        }
-      } catch (error) {
-        console.error("Weather fetch error:", error);
-      }
-    };
-    fetchWeather();
-  }, []);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -141,6 +117,7 @@ export default function FarmerDashboard() {
         .action-btn label {
           font-size: 12px;
           font-weight: 600;
+          display: none; /* Hide label to keep only icons */
         }
 
         .market-price {
@@ -219,7 +196,7 @@ export default function FarmerDashboard() {
           color: white;
         }
 
-        /* Weather Section */
+        /* Weather Section Design Only */
         .weather {
           background: white;
           color: black;
@@ -228,6 +205,7 @@ export default function FarmerDashboard() {
           display: flex;
           align-items: center;
           gap: 12px;
+          max-width: 200px;
         }
         .weather img {
           width: 60px;
@@ -249,12 +227,19 @@ export default function FarmerDashboard() {
           justify-content: space-around;
           color: #3f8454;
           font-weight: 700;
-          font-size: 14px;
+          font-size: 24px;
+          user-select: none;
         }
         .nav-item {
-          text-align: center;
           cursor: pointer;
-          user-select: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: 1;
+          color: #3f8454;
+        }
+        .nav-item.active {
+          color: #2e8b57;
         }
       `}</style>
 
@@ -284,7 +269,10 @@ export default function FarmerDashboard() {
           <div className="card">
             <h3>Active Orders</h3>
             <div className="value">24</div>
-            <div className="highlight" style={{ background: "#f0c77d", color: "#775e15" }}>
+            <div
+              className="highlight"
+              style={{ background: "#f0c77d", color: "#775e15" }}
+            >
               Pending
             </div>
           </div>
@@ -296,19 +284,19 @@ export default function FarmerDashboard() {
 
         {/* Quick Actions */}
         <div className="quick-actions">
-          <div className="action-btn" title="Add Product">
+          <div className="action-btn" title="Add Product" onClick={() => navigate("/add-product")}>
             <span>➕</span>
             <label>Add Product</label>
           </div>
-          <div className="action-btn" title="Orders">
+          <div className="action-btn" title="Orders" onClick={() => navigate("/farmer-orders")}>
             <span>📦</span>
             <label>Orders</label>
           </div>
-          <div className="action-btn" title="My Farm">
+          <div className="action-btn" title="My Farm" onClick={() => navigate("/my-farm")}>
             <span>🌾</span>
             <label>My Farm</label>
           </div>
-          <div className="action-btn" title="Add Expert">
+          <div className="action-btn" title="Add Expert" onClick={() => navigate("/add-expert")}>
             <span>🧑‍🌾</span>
             <label>Add Expert</label>
           </div>
@@ -323,27 +311,30 @@ export default function FarmerDashboard() {
           <div className="price-demand">↗ High Demand</div>
         </div>
 
-        {/* Weather Widget */}
-        {weather ? (
-          <div className="weather" title={`Weather in ${weather.city}`}>
-            <img src={weather.icon} alt={weather.description} />
-            <div className="weather-info">
-              {weather.temp}°C <br />
-              {weather.description.charAt(0).toUpperCase() + weather.description.slice(1)}
-            </div>
+        {/* Static Weather Section */}
+        <div className="weather" title="Weather Info">
+          <img
+            src="https://openweathermap.org/img/wn/01d@2x.png"
+            alt="Clear sky"
+          />
+          <div className="weather-info">
+            25°C <br />
+            Clear Sky
           </div>
-        ) : (
-          <div className="weather">Loading weather...</div>
-        )}
+        </div>
 
         {/* Recent Orders */}
         <div className="recent-orders">
           <div className="recent-orders-header">
             <div>Recent Orders</div>
-            <div style={{ cursor: "pointer", color: "#3f8454" }}>See All</div>
+            <div
+              style={{ cursor: "pointer", color: "#3f8454" }}
+              onClick={() => navigate("/farmer-orders")}
+            >
+              See All
+            </div>
           </div>
 
-          {/* Single Order */}
           <div className="order-item">
             <img
               src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea"
@@ -359,7 +350,6 @@ export default function FarmerDashboard() {
             </div>
           </div>
 
-          {/* Add more orders below as needed */}
           <div className="order-item">
             <img
               src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce"
@@ -378,11 +368,41 @@ export default function FarmerDashboard() {
 
         {/* Bottom Navigation */}
         <div className="bottom-nav">
-          <div className="nav-item">🏠<br />Home</div>
-          <div className="nav-item">🍅<br />Products</div>
-          <div className="nav-item">🧑‍🌾<br />Experts</div>
-          <div className="nav-item">📅<br />Crop Calendar</div>
-          <div className="nav-item">👤<br />Profile</div>
+          <div
+            className="nav-item active"
+            onClick={() => navigate("/farmer-dashboard")}
+            title="Home"
+          >
+            🏠
+          </div>
+          <div
+            className="nav-item"
+            onClick={() => navigate("/farmer-products")}
+            title="Products"
+          >
+            🍅
+          </div>
+          <div
+            className="nav-item"
+            onClick={() => navigate("/farmer-experts")}
+            title="Experts"
+          >
+            🧑‍🌾
+          </div>
+          <div
+            className="nav-item"
+            onClick={() => navigate("/crop-calendar")}
+            title="Crop Calendar"
+          >
+            📅
+          </div>
+          <div
+            className="nav-item"
+            onClick={() => navigate("/farmer-profile")}
+            title="Profile"
+          >
+            👤
+          </div>
         </div>
       </div>
     </>
