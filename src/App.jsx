@@ -8,6 +8,10 @@ import FarmerDashboard from "./Components/FarmerDashboard";
 import BuyerDashboard from "./Components/BuyerDashboard";
 import ExpertDashboard from "./Components/ExpertDashboard";
 import ExplorePage from "./Components/ExplorePage";
+import CartPage from "./Components/CartPage";
+
+
+
 
 function App() {
   return (
@@ -23,6 +27,8 @@ function App() {
         <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
+        <Route path="/buyer-cart" element={<CartPage />} />
+        
 
         {/* Buyer Explore */}
         <Route path="/buyer-explore" element={<ExplorePage />} />

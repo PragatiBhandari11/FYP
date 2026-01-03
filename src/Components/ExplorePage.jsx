@@ -201,7 +201,7 @@ export default function ExplorePage() {
             <span>Explore</span>
           </div>
 
-          <div className="nav-item">
+          <div className="nav-item"  onClick={() => navigate("/buyer-cart")}>
             <span>🛒</span>
             <span>Cart</span>
           </div>
