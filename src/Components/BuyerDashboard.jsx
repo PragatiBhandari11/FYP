@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function BuyerDashboard() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const products = [
@@ -11,7 +13,6 @@ export default function BuyerDashboard() {
 
   return (
     <>
-      {/* CSS */}
       <style>{`
         * {
           box-sizing: border-box;
@@ -33,7 +34,6 @@ export default function BuyerDashboard() {
           flex-direction: column;
         }
 
-        /* Header */
         .header {
           background: #2e8b57;
           color: white;
@@ -44,10 +44,6 @@ export default function BuyerDashboard() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-        }
-
-        .icons {
-          font-size: 20px;
         }
 
         .search {
@@ -62,11 +58,6 @@ export default function BuyerDashboard() {
           padding: 16px;
         }
 
-        section h3 {
-          margin-bottom: 10px;
-        }
-
-        /* Categories */
         .categories {
           display: flex;
           justify-content: space-between;
@@ -89,7 +80,6 @@ export default function BuyerDashboard() {
           margin-top: 4px;
         }
 
-        /* Order */
         .order {
           background: #fff3cd;
           padding: 14px;
@@ -105,7 +95,6 @@ export default function BuyerDashboard() {
           cursor: pointer;
         }
 
-        /* Products */
         .product {
           background: #f9f9f9;
           padding: 14px;
@@ -114,12 +103,6 @@ export default function BuyerDashboard() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 10px;
-        }
-
-        .product p {
-          font-size: 12px;
-          color: gray;
-          margin: 4px 0;
         }
 
         .price {
@@ -144,7 +127,7 @@ export default function BuyerDashboard() {
           border-top: 1px solid #ddd;
           display: flex;
           justify-content: space-around;
-          padding: 10px 0;
+          padding: 12px 0;
           background: #fff;
         }
 
@@ -168,7 +151,6 @@ export default function BuyerDashboard() {
         }
       `}</style>
 
-      {/* UI */}
       <div className="app">
         {/* Header */}
         <div className="header">
@@ -177,12 +159,11 @@ export default function BuyerDashboard() {
               <h2>Hello, Sarah</h2>
               <p>Find fresh products nearby</p>
             </div>
-            <div className="icons">🛒 🔔</div>
+            <div>🛒 🔔</div>
           </div>
 
           <input
             className="search"
-            type="text"
             placeholder="Search vegetables, fruits..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -231,22 +212,26 @@ export default function BuyerDashboard() {
 
         {/* Bottom Navigation */}
         <div className="bottom-nav">
-          <div className="nav-item active">
+          <div className="nav-item active" onClick={() => navigate("/buyer-dashboard")}>
             <span className="icon">🏠</span>
             <span>Home</span>
           </div>
-          <div className="nav-item">
+
+          <div className="nav-item" onClick={() => navigate("/buyer-explore")}>
             <span className="icon">🔍</span>
             <span>Explore</span>
           </div>
+
           <div className="nav-item">
             <span className="icon">🛒</span>
             <span>Cart</span>
           </div>
+
           <div className="nav-item">
             <span className="icon">📦</span>
             <span>Orders</span>
           </div>
+
           <div className="nav-item">
             <span className="icon">👤</span>
             <span>Profile</span>
