@@ -13,6 +13,7 @@ const SignUpPage = () => {
     email: "",
     phone: "",
     country: "",
+    city: "",
     password: "",
     confirmPassword: "",
   });
@@ -40,6 +41,7 @@ const SignUpPage = () => {
           email: form.email,
           phone: form.phone,
           country: form.country,
+          city: form.city,
           password: form.password,
           role,
         }),
@@ -114,6 +116,19 @@ const SignUpPage = () => {
             value={form.country}
             onChange={handleChange}
             style={styles.input}
+          />
+        </label>
+
+        <label style={styles.label}>
+          City
+          <input
+            type="text"
+            name="city"
+            value={form.city}
+            placeholder="e.g. Kathmandu"
+            onChange={handleChange}
+            style={styles.input}
+            required
           />
         </label>
 

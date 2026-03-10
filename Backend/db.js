@@ -36,6 +36,7 @@ db.connect((err) => {
       email VARCHAR(100) NOT NULL UNIQUE,
       phone VARCHAR(20),
       country VARCHAR(50),
+      city VARCHAR(50),
       role ENUM('Buyer','Farmer','Expert') NOT NULL,
       password VARCHAR(255) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -51,9 +52,8 @@ db.connect((err) => {
       price_per_kg DECIMAL(10,2) NOT NULL,
       quantity INT NOT NULL,
       image_path VARCHAR(255),
-      farmer_id INT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (farmer_id) REFERENCES farmers(id) ON DELETE SET NULL
+      farmer_id VARCHAR(100),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
 
@@ -72,6 +72,17 @@ db.connect((err) => {
       console.error("❌ Failed to create users table:", err.message);
     } else {
       console.log("✅ users table ready");
+        // Robust Migration: Check if column exists, then add if missing
+        const checkCitySql = "SHOW COLUMNS FROM users LIKE 'city'";
+        db.query(checkCitySql, (checkErr, results) => {
+          if (checkErr) return console.error("❌ Column check error:", checkErr.message);
+          if (results.length === 0) {
+            db.query("ALTER TABLE users ADD COLUMN city VARCHAR(50)", (alterErr) => {
+              if (alterErr) console.error("❌ Migration error (users):", alterErr.message);
+              else console.log("✅ Added city column to users table");
+            });
+          }
+        });
     }
   });
 
@@ -81,6 +92,18 @@ db.connect((err) => {
       console.error("❌ Failed to create products table:", err.message);
     } else {
       console.log("✅ products table ready");
+
+        // Robust Migration: Check if column exists, then add if missing
+        const checkFarmerIdSql = "SHOW COLUMNS FROM products LIKE 'farmer_id'";
+        db.query(checkFarmerIdSql, (checkErr, results) => {
+          if (checkErr) return console.error("❌ Column check error:", checkErr.message);
+          if (results.length === 0) {
+            db.query("ALTER TABLE products ADD COLUMN farmer_id VARCHAR(100)", (alterErr) => {
+              if (alterErr) console.error("❌ Migration error (products):", alterErr.message);
+              else console.log("✅ Added farmer_id column to products table");
+            });
+          }
+        });
     }
   });
 

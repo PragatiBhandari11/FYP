@@ -22,7 +22,7 @@ router.post("/add-product", upload.single("image"), (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  const sql = "INSERT INTO products (farmer_id, name, category, price_per_kg, quantity, image_url) VALUES (?, ?, ?, ?, ?, ?)";
+  const sql = "INSERT INTO products (farmer_id, name, category, price_per_kg, quantity, image_path) VALUES (?, ?, ?, ?, ?, ?)";
   
   db.query(sql, [farmerId, name, category, price, quantity, imagePath], (err, result) => {
     if (err) {

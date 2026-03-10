@@ -3,13 +3,26 @@ import { useNavigate } from "react-router-dom";
 
 export default function FarmerDashboard() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState("Rajesh");
+  const [userName, setUserName] = useState("");
+  const [weather, setWeather] = useState({ temp: "--", condition: "Loading..." });
 
   useEffect(() => {
-    const storedName = localStorage.getItem("userFullName");
-    if (storedName) {
-      setUserName(storedName);
-    }
+    const email = localStorage.getItem("userEmail");
+    if (!email) return;
+
+    // Fetch user profile to get City
+    fetch(`http://localhost:5000/api/user/${email}`)
+      .then(res => res.json())
+      .then(user => {
+        setUserName(user.full_name);
+        if (user.city) {
+          // Fetch weather for that city
+          fetch(`http://localhost:5000/api/weather/${user.city}`)
+            .then(res => res.json())
+            .then(data => setWeather(data))
+            .catch(err => console.error("Weather fetch error:", err));
+        }
+      });
   }, []);
 
   return (
@@ -300,10 +313,10 @@ export default function FarmerDashboard() {
             <strong>$340/ton</strong>
             <div className="badge">High Demand</div>
           </div>
-          <div className="info-card blue">
-            <div>Today</div>
-            <h3>24°C</h3>
-            <div>Partly Cloudy</div>
+          <div className="info-card blue" onClick={() => navigate("/weather-detail")} style={{cursor: "pointer"}}>
+            <div>{weather.city || "Weather"}</div>
+            <h3>{weather.temp}°C</h3>
+            <div>{weather.condition}</div>
           </div>
         </div>
 
@@ -348,7 +361,7 @@ export default function FarmerDashboard() {
         <div className="section-title">Collaborations</div>
 
         <div className="collab-list">
-          <div className="collab-card">
+          <div className="collab-card" onClick={() => navigate("/collaboration/1")} style={{cursor:"pointer"}}>
             <img
               className="collab-img"
               src="https://images.unsplash.com/photo-1566073771259-6a8506099945"
@@ -357,7 +370,7 @@ export default function FarmerDashboard() {
             <p>Green Valley Hotel</p>
           </div>
 
-          <div className="collab-card">
+          <div className="collab-card" onClick={() => navigate("/collaboration/2")} style={{cursor:"pointer"}}>
             <img
               className="collab-img"
               src="https://images.unsplash.com/photo-1552566626-52f8b828add9"
@@ -366,7 +379,7 @@ export default function FarmerDashboard() {
             <p>The Fresh Table</p>
           </div>
 
-          <div className="collab-card">
+          <div className="collab-card" onClick={() => navigate("/collaboration/3")} style={{cursor:"pointer"}}>
             <img
               className="collab-img"
               src="https://images.unsplash.com/photo-1528605248644-14dd04022da1"

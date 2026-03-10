@@ -46,20 +46,38 @@ const data = {
     { label: "Dashboard", icon: "📊", path: "/expert-dashboard" },
     { label: "Queries", icon: "❓", path: "/queries" },
     { label: "Knowledge", icon: "📚", path: "/knowledge" },
-    { label: "Profile", icon: "👤", path: "/profile" },
+    { label: "Profile", icon: "👤", path: "/expert-profile" },
   ],
 };
 
 const ExpertDashboard = () => {
+  const [user, setUser] = React.useState({ name: "Expert", role: "Specialist", avatar: data.user.avatar });
+
+  React.useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    if (!email) return;
+
+    fetch(`http://localhost:5000/api/user/${email}`)
+      .then(res => res.json())
+      .then(data => {
+        setUser({
+          name: data.full_name,
+          role: "Expert Specialist",
+          avatar: "https://randomuser.me/api/portraits/men/32.jpg" // Placeholder for now
+        });
+      })
+      .catch(err => console.error("Error fetching expert profile:", err));
+  }, []);
+
   return (
     <div style={styles.page}>
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.profile}>
-          <img src={data.user.avatar} alt="avatar" style={styles.avatar} />
+          <img src={user.avatar} alt="avatar" style={styles.avatar} />
           <div>
-            <div style={styles.name}>{data.user.name}</div>
-            <div style={styles.role}>{data.user.role}</div>
+            <div style={styles.name}>{user.name}</div>
+            <div style={styles.role}>{user.role}</div>
           </div>
         </div>
         <button style={styles.bellButton} aria-label="Notifications">

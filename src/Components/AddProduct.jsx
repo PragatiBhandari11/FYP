@@ -48,7 +48,7 @@ export default function AddProduct() {
     }
 
     try {
-      const response = await fetch("http://localhost:5173/api/products/add-product", {
+      const response = await fetch("http://localhost:5000/api/add-product", {
         method: "POST",
         body: data,
       });

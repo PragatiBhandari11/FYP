@@ -6,7 +6,7 @@ const router = express.Router();
 
 // SIGN UP USER
 router.post("/signup", async (req, res) => {
-  const { fullName, email, phone, country, role, password } = req.body;
+  const { fullName, email, phone, country, city, role, password } = req.body;
 
   if (!fullName || !email || !password || !role) {
     return res.status(400).json({ message: "Missing required fields" });
@@ -17,17 +17,17 @@ router.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const sql = `
-      INSERT INTO users (full_name, email, phone, country, role, password)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO users (full_name, email, phone, country, city, role, password)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(
       sql,
-      [fullName, email, phone, country, role, hashedPassword],
+      [fullName, email, phone, country, city, role, hashedPassword],
       (err, result) => {
         if (err) {
           console.error("❌ Signup error:", err.message);
-          return res.status(500).json({ message: "User already exists or DB error" });
+          return res.status(500).json({ message: `Database error: ${err.message}` });
         }
 
         res.status(201).json({
@@ -45,7 +45,7 @@ router.post("/signup", async (req, res) => {
 router.get("/user/:email", (req, res) => {
   const { email } = req.params;
 
-  const sql = "SELECT full_name, email, phone, country, role, created_at FROM users WHERE email = ?";
+  const sql = "SELECT full_name, email, phone, country, city, role, created_at FROM users WHERE email = ?";
   
   db.query(sql, [email], (err, result) => {
     if (err) {
