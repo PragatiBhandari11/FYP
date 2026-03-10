@@ -28,7 +28,7 @@ const Welcome = () => {
           Already have an account?
           <span
             style={styles.signInLink}
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/signup")}
           >
             {" "}Sign In
           </span>

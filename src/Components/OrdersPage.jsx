@@ -16,19 +16,19 @@ export default function OrdersPage() {
     {
       id: "ORD-1018",
       date: "Aug 12, 2025",
-      total: "$18.40",
+      total: "Rs18.40",
       status: "Delivered",
     },
     {
       id: "ORD-1009",
       date: "Aug 05, 2025",
-      total: "$24.90",
+      total: "Rs24.90",
       status: "Delivered",
     },
     {
       id: "ORD-0997",
       date: "Jul 28, 2025",
-      total: "$12.30",
+      total: "Rs12.30",
       status: "Cancelled",
     },
   ]);
@@ -159,7 +159,7 @@ export default function OrdersPage() {
               {currentOrder.steps.map((step, index) => (
                 <div
                   key={step}
-                  className={`step ${
+                  className={`step Rs{
                     index <= currentOrder.currentStep ? "active" : ""
                   }`}
                 >

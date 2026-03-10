@@ -1,6 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function FarmerDashboard() {
+  const navigate = useNavigate();
+  const [userName, setUserName] = useState("Rajesh");
+
+  useEffect(() => {
+    const storedName = localStorage.getItem("userFullName");
+    if (storedName) {
+      setUserName(storedName);
+    }
+  }, []);
+
   return (
     <>
       <style>{`
@@ -232,6 +243,7 @@ export default function FarmerDashboard() {
           font-size: 12px;
           text-align: center;
           color: #6b7280;
+          cursor: pointer;
         }
 
         .bottom-nav .active {
@@ -245,7 +257,7 @@ export default function FarmerDashboard() {
           <div className="profile">
             <div className="avatar">👤</div>
             <div>
-              <strong>Hello, Rajesh</strong>
+              <strong>Hello, {userName}</strong>
               <div className="verified">Verified Farmer</div>
             </div>
           </div>
@@ -273,7 +285,9 @@ export default function FarmerDashboard() {
 
         {/* Actions */}
         <div className="actions">
-          <div className="action"><div>＋</div>Add Product</div>
+          <div className="action" onClick={() => navigate("/add-product")} style={{cursor: "pointer"}}>
+            <div>＋</div>Add Product
+          </div>
           <div className="action"><div>🧾</div>View Orders</div>
           <div className="action"><div>🚜</div>My Farm</div>
           <div className="action"><div>👤</div>Add Expert</div>
@@ -305,7 +319,7 @@ export default function FarmerDashboard() {
           <div className="order-info">
             <strong>Fresh Carrot</strong>
             <div>50 kg • Order #2049</div>
-            <strong>$120.00</strong>
+            <strong>Rs120.00</strong>
           </div>
           <div className="order-actions">
             <button className="reject">Reject</button>
@@ -364,11 +378,11 @@ export default function FarmerDashboard() {
 
         {/* Bottom nav */}
         <div className="bottom-nav">
-          <span className="active">🏠<br />Home</span>
+          <span className="active" onClick={() => navigate("/farmer-dashboard")}>🏠<br />Home</span>
           <span>🌱<br />Products</span>
           <span>👥<br />Experts</span>
           <span>📅<br />Calendar</span>
-          <span>👤<br />Profile</span>
+          <span onClick={() => navigate("/profile")}>👤<br />Profile</span>
         </div>
       </div>
     </>

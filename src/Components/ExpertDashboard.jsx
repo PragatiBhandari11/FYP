@@ -1,346 +1,213 @@
-import React, { useState } from "react";
+import React from "react";
+import { Link } from "react-router-dom"; // Ensure you have installed react-router-dom
 
-/*
-  ExpertDashboardMobile.jsx
-  - Mobile-style expert dashboard
-  - GREEN theme
-  - Farmer posts include images
-  - Tabs: Feed | Chat | Profile
-*/
-
-export default function ExpertDashboardMobile() {
-  const [activeTab, setActiveTab] = useState("feed");
-  const [verificationFile, setVerificationFile] = useState(null);
-  const [isVerified, setIsVerified] = useState(false);
-
-  // Farmer feed with images
-  const [feedItems, setFeedItems] = useState([
+const data = {
+  user: {
+    name: "Dr. A. Patel",
+    role: "Soil & Crop Specialist",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+  },
+  stats: [
+    { label: "Active Queries", value: 12 },
+    { label: "Pending", value: 5 },
+    { label: "Resolved", value: 142 },
+  ],
+  tools: [
+    { label: "Write Article", icon: "📝" },
+    { label: "Upload Guide", icon: "☁️⬆️" },
+  ],
+  questions: [
     {
-      id: 1,
-      farmer: "Ram",
-      title: "Wheat crop yellowing",
-      body: "My wheat leaves are turning yellow on edges.",
-      image: "https://via.placeholder.com/400x220?text=Wheat+Leaf",
-      expertComment: "",
+      tag: "DISEASE",
+      tagColor: "#d32f2f",
+      question: "Yellow spots appearing on tomato leaves. Is this blight?",
+      author: "Rajesh Kumar",
+      location: "Karnataka",
+      time: "2h ago",
     },
     {
-      id: 2,
-      farmer: "Sita",
-      title: "Tomato leaf spots",
-      body: "There are white spots on tomato leaves.",
-      image: "https://via.placeholder.com/400x220?text=Tomato+Leaf",
-      expertComment: "",
+      tag: "SOIL HEALTH",
+      tagColor: "#a57c2c",
+      question: "Recommended fertilizer schedule for cotton in black soil?",
+      author: "Amit Singh",
+      location: "Maharashtra",
+      time: "5h ago",
     },
-  ]);
+    {
+      tag: "WEATHER",
+      tagColor: "#1976d2",
+      question: "Precautions for wheat crop during upcoming frost?",
+      author: "Suresh",
+      location: "Punjab",
+      time: "1d ago",
+    },
+  ],
+  navItems: [
+    { label: "Dashboard", icon: "📊", path: "/expert-dashboard" },
+    { label: "Queries", icon: "❓", path: "/queries" },
+    { label: "Knowledge", icon: "📚", path: "/knowledge" },
+    { label: "Profile", icon: "👤", path: "/profile" },
+  ],
+};
 
-  const [draftComments, setDraftComments] = useState({});
-
-  // Chat
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, from: "farmer", text: "Hello expert, my crop needs help." },
-    { id: 2, from: "expert", text: "Please share a photo and details." },
-  ]);
-  const [newMessage, setNewMessage] = useState("");
-
-  const handleSubmitComment = (itemId) => {
-    const comment = (draftComments[itemId] || "").trim();
-    if (!comment) return;
-    setFeedItems((prev) =>
-      prev.map((f) => (f.id === itemId ? { ...f, expertComment: comment } : f))
-    );
-    setDraftComments((prev) => ({ ...prev, [itemId]: "" }));
-  };
-
-  const handleSendMessage = () => {
-    if (!isVerified) return alert("Verify account to chat.");
-    if (!newMessage.trim()) return;
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now(), from: "expert", text: newMessage },
-    ]);
-    setNewMessage("");
-  };
-
-  const handleFileChange = (e) => {
-    setVerificationFile(e.target.files?.[0] ?? null);
-  };
-
-  const handleCompleteVerification = () => {
-    if (!verificationFile) return alert("Upload ID first.");
-    setIsVerified(true);
-    alert("Verification successful (simulated).");
-  };
-
-  /* ---------------- PAGES ---------------- */
-
-  const FeedPage = () => (
+const ExpertDashboard = () => {
+  return (
     <div style={styles.page}>
-      <h2 style={styles.heading}>Farmer Posts</h2>
-
-      {feedItems.map((item) => (
-        <div key={item.id} style={styles.card}>
-          <div style={styles.cardHeader}>
-            <span style={styles.farmerBadge}>👨‍🌾 {item.farmer}</span>
-            <strong>{item.title}</strong>
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.profile}>
+          <img src={data.user.avatar} alt="avatar" style={styles.avatar} />
+          <div>
+            <div style={styles.name}>{data.user.name}</div>
+            <div style={styles.role}>{data.user.role}</div>
           </div>
-
-          <p style={styles.cardText}>{item.body}</p>
-
-          {item.image && (
-            <img
-              src={item.image}
-              alt="Crop"
-              style={{
-                width: "100%",
-                borderRadius: 10,
-                marginBottom: 8,
-                maxHeight: 220,
-                objectFit: "cover",
-              }}
-            />
-          )}
-
-          <textarea
-            placeholder="Write expert feedback..."
-            value={draftComments[item.id] ?? ""}
-            onChange={(e) =>
-              setDraftComments((p) => ({ ...p, [item.id]: e.target.value }))
-            }
-            style={styles.textarea}
-          />
-
-          <button
-            style={styles.btnPrimary}
-            onClick={() => handleSubmitComment(item.id)}
-          >
-            Submit Feedback
-          </button>
-
-          {item.expertComment && (
-            <div style={styles.expertComment}>
-              <strong>✅ Your Comment:</strong>
-              <div>{item.expertComment}</div>
-            </div>
-          )}
         </div>
-      ))}
-    </div>
-  );
+        <button style={styles.bellButton} aria-label="Notifications">
+          🔔
+        </button>
+      </div>
 
-  const ChatPage = () => (
-    <div style={styles.page}>
-      <h2 style={styles.heading}>Chat with Farmers</h2>
-
-      {!isVerified && (
-        <div style={styles.lockNotice}>
-          🔒 Verify your account to unlock chat
-        </div>
-      )}
-
-      <div style={styles.chatBox}>
-        {chatMessages.map((m) => (
-          <div
-            key={m.id}
-            style={{
-              ...styles.chatMessage,
-              alignSelf: m.from === "expert" ? "flex-end" : "flex-start",
-              background: m.from === "expert" ? "#2e7d32" : "#e8f5e9",
-              color: m.from === "expert" ? "#fff" : "#111",
-            }}
-          >
-            {m.text}
+      {/* Stats Cards */}
+      <div style={styles.statsContainer}>
+        {data.stats.map((stat) => (
+          <div key={stat.label} style={styles.statCard}>
+            <div style={styles.statValue}>{stat.value}</div>
+            <div style={styles.statLabel}>{stat.label}</div>
           </div>
         ))}
       </div>
 
-      <div style={styles.chatRow}>
-        <input
-          style={styles.input}
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          disabled={!isVerified}
-          placeholder="Type message..."
-        />
-        <button
-          style={styles.sendBtn}
-          onClick={handleSendMessage}
-          disabled={!isVerified}
-        >
-          ➤
-        </button>
+      {/* Expert Tools Section */}
+      <div style={styles.sectionTitle}>Expert Tools</div>
+      <div style={styles.toolsContainer}>
+        {data.tools.map((tool) => (
+          <div key={tool.label} style={styles.toolCard}>
+            <div style={styles.toolIcon}>{tool.icon}</div>
+            <div>{tool.label}</div>
+          </div>
+        ))}
       </div>
-    </div>
-  );
 
-  const ProfilePage = () => (
-    <div style={styles.page}>
-      <h2 style={styles.heading}>Profile & Verification</h2>
+      {/* Questions Header */}
+      <div style={styles.newQuestionsHeader}>
+        <div style={styles.sectionTitle}>New Questions</div>
+        <Link to="/queries" style={styles.viewAll}>
+          View All
+        </Link>
+      </div>
 
-      <div style={styles.card}>
-        <p>
-          Status:{" "}
-          {isVerified ? (
-            <span style={{ color: "green" }}>✔ Verified</span>
-          ) : (
-            <span style={{ color: "crimson" }}>❌ Not Verified</span>
-          )}
-        </p>
-
-        {!isVerified && (
-          <>
-            <input type="file" onChange={handleFileChange} />
-            <button
-              style={styles.btnPrimary}
-              onClick={handleCompleteVerification}
+      {/* Question List */}
+      <div style={{ paddingBottom: "20px" }}>
+        {data.questions.map((q, i) => (
+          <div key={i} style={styles.questionCard}>
+            <span
+              style={{
+                ...styles.tag,
+                backgroundColor: q.tagColor,
+              }}
             >
-              Submit Verification
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={styles.container}>
-      <div style={styles.content}>
-        {activeTab === "feed" && <FeedPage />}
-        {activeTab === "chat" && <ChatPage />}
-        {activeTab === "profile" && <ProfilePage />}
+              {q.tag}
+            </span>
+            <div style={styles.questionText}>{q.question}</div>
+            <div style={styles.author}>
+              <span>👤 {q.author}</span> • <span>{q.location}</span>
+            </div>
+            <div style={styles.time}>{q.time}</div>
+          </div>
+        ))}
       </div>
 
-      <nav style={styles.bottomNav}>
-        <button
-          style={activeTab === "feed" ? styles.navActive : styles.navItem}
-          onClick={() => setActiveTab("feed")}
-        >
-          🏡 Feed
-        </button>
-        <button
-          style={activeTab === "chat" ? styles.navActive : styles.navItem}
-          onClick={() => setActiveTab("chat")}
-        >
-          💬 Chat
-        </button>
-        <button
-          style={activeTab === "profile" ? styles.navActive : styles.navItem}
-          onClick={() => setActiveTab("profile")}
-        >
-          👤 Profile
-        </button>
+      {/* FUNCTIONAL BOTTOM NAVIGATION */}
+      <nav style={styles.navbar}>
+        {data.navItems.map((item) => (
+          <Link key={item.label} to={item.path} style={styles.navItem}>
+            <div style={styles.navIcon}>{item.icon}</div>
+            <div style={styles.navLabel}>{item.label}</div>
+          </Link>
+        ))}
       </nav>
     </div>
   );
-}
-
-/* ---------------- STYLES (GREEN THEME) ---------------- */
+};
 
 const styles = {
-  container: {
-    fontFamily: "Arial",
-    height: "100vh",
-    background: "linear-gradient(180deg,#f1f8e9,#ffffff)",
+  page: {
+    maxWidth: 420,
+    margin: "0 auto",
+    backgroundColor: "#f5f9f5",
+    fontFamily: "'Inter', sans-serif",
+    paddingBottom: 80, 
+    minHeight: "100vh",
+    color: "#333",
+    position: "relative",
   },
-  content: { paddingBottom: 90 },
-  page: { padding: 16, maxWidth: 520, margin: "auto" },
-  heading: { color: "#2e7d32", fontSize: 20, marginBottom: 10 },
-  card: {
-    background: "#fff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 14,
-    boxShadow: "0 6px 18px rgba(46,125,50,0.15)",
+  header: {
+    backgroundColor: "#3a8a3a",
+    borderRadius: "15px",
+    color: "white",
+    padding: "15px 20px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    margin: "20px 15px 10px 15px",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
   },
-  cardHeader: { display: "flex", gap: 10, marginBottom: 6 },
-  farmerBadge: {
-    background: "#e8f5e9",
-    color: "#2e7d32",
-    padding: "4px 10px",
-    borderRadius: 20,
-    fontWeight: "bold",
+  profile: { display: "flex", gap: 12, alignItems: "center" },
+  avatar: { width: 48, height: 48, borderRadius: "50%", objectFit: "cover" },
+  name: { fontWeight: "bold", fontSize: 16 },
+  role: { fontSize: 12, opacity: 0.85, marginTop: -2 },
+  bellButton: { background: "transparent", border: "none", fontSize: 22, cursor: "pointer", color: "white" },
+  statsContainer: {
+    display: "flex",
+    gap: 10,
+    backgroundColor: "#3a8a3a",
+    borderRadius: "15px",
+    color: "white",
+    padding: "12px 15px",
+    margin: "0 15px 20px 15px",
+    justifyContent: "space-around",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
   },
-  cardText: { fontSize: 14, marginBottom: 6 },
-  textarea: {
-    width: "100%",
-    minHeight: 60,
-    borderRadius: 8,
-    padding: 8,
-    border: "1px solid #c8e6c9",
-  },
-  btnPrimary: {
-    width: "100%",
-    marginTop: 8,
-    padding: 10,
-    background: "linear-gradient(90deg,#2e7d32,#43a047)",
-    color: "#fff",
-    border: "none",
-    borderRadius: 10,
-    fontWeight: "bold",
-  },
-  expertComment: {
-    marginTop: 8,
-    background: "#e8f5e9",
-    padding: 8,
-    borderRadius: 8,
-  },
-  lockNotice: {
-    background: "#fff3e0",
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  chatBox: {
-    background: "#fff",
-    padding: 10,
-    borderRadius: 12,
-    maxHeight: 300,
-    overflow: "auto",
-  },
-  chatMessage: {
-    padding: "8px 12px",
-    borderRadius: 16,
-    marginBottom: 6,
-    maxWidth: "75%",
-  },
-  chatRow: { display: "flex", gap: 8, marginTop: 8 },
-  input: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-    border: "1px solid #c8e6c9",
-  },
-  sendBtn: {
-    padding: "10px 14px",
-    background: "#2e7d32",
-    color: "#fff",
-    borderRadius: 10,
-    border: "none",
-  },
-  bottomNav: {
+  statCard: { flex: 1, textAlign: "center" },
+  statValue: { fontWeight: "bold", fontSize: 20 },
+  statLabel: { fontSize: 12, opacity: 0.8, marginTop: 4 },
+  sectionTitle: { fontWeight: "600", fontSize: 16, marginLeft: 20, marginBottom: 12 },
+  toolsContainer: { display: "flex", gap: 15, padding: "0 20px", marginBottom: 20 },
+  toolCard: { backgroundColor: "#e6f0e6", flex: 1, padding: 18, borderRadius: 12, textAlign: "center", fontWeight: "600", fontSize: 14, cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" },
+  toolIcon: { fontSize: 24, marginBottom: 8 },
+  newQuestionsHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", marginBottom: 10 },
+  viewAll: { color: "#3a8a3a", fontWeight: "600", fontSize: 14, textDecoration: "none", cursor: "pointer" },
+  questionCard: { backgroundColor: "white", padding: 15, borderRadius: 12, margin: "0 15px 15px 15px", boxShadow: "0 1px 4px rgba(0,0,0,0.1)", position: "relative" },
+  tag: { position: "absolute", top: 15, left: 15, color: "white", fontWeight: "600", fontSize: 11, padding: "3px 8px", borderRadius: 8, letterSpacing: 0.7 },
+  questionText: { fontWeight: "600", fontSize: 14, paddingLeft: 80, paddingRight: 10 },
+  author: { fontSize: 12, color: "#666", paddingLeft: 80, marginTop: 6 },
+  time: { fontSize: 11, color: "#999", paddingLeft: 80, marginTop: 2 },
+  navbar: {
     position: "fixed",
-    bottom: 10,
+    bottom: 0,
     left: "50%",
     transform: "translateX(-50%)",
-    width: "90%",
-    background: "#fff",
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "white",
+    borderTop: "1px solid #ddd",
     display: "flex",
     justifyContent: "space-around",
-    borderRadius: 20,
-    padding: 10,
-    boxShadow: "0 8px 20px rgba(46,125,50,0.25)",
+    paddingTop: 8,
+    paddingBottom: 8,
+    boxShadow: "0 -2px 6px rgba(0,0,0,0.05)",
+    zIndex: 1000,
   },
   navItem: {
-    background: "transparent",
-    border: "none",
-    color: "#555",
-    fontWeight: "bold",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textDecoration: "none", // Removes the blue underline from Links
+    color: "#3a8a3a",
+    cursor: "pointer",
   },
-  navActive: {
-    background: "#e8f5e9",
-    border: "none",
-    color: "#2e7d32",
-    padding: "6px 12px",
-    borderRadius: 12,
-    fontWeight: "bold",
-  },
+  navIcon: { fontSize: 20, marginBottom: 2 },
+  navLabel: { fontWeight: "600", fontSize: 12 },
 };
+
+export default ExpertDashboard;

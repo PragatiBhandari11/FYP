@@ -156,7 +156,7 @@ export default function CartPage() {
             <div className="item-info">
               <strong>{item.name}</strong>
               <p>{item.seller}</p>
-              <strong>${item.price.toFixed(2)}</strong>
+              <strong>Rs{item.price.toFixed(2)}</strong>
             </div>
             <div className="qty">
               <button onClick={() => updateQty(item.id, -1)}>-</button>
@@ -169,13 +169,13 @@ export default function CartPage() {
         <div className="section">
           <h4>Payment Method</h4>
           <div
-            className={`payment ${payment === "card" ? "active" : ""}`}
+            className={`payment Rs{payment === "card" ? "active" : ""}`}
             onClick={() => setPayment("card")}
           >
             Visa ending in 4242 ✓
           </div>
           <div
-            className={`payment ${payment === "cash" ? "active" : ""}`}
+            className={`payment Rs{payment === "cash" ? "active" : ""}`}
             onClick={() => setPayment("cash")}
           >
             Cash on Delivery
@@ -184,10 +184,10 @@ export default function CartPage() {
 
         <div className="section summary">
           <h4>Order Summary</h4>
-          <div><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-          <div><span>Delivery</span><span>${delivery.toFixed(2)}</span></div>
-          <div><span>Tax (5%)</span><span>${tax.toFixed(2)}</span></div>
-          <div className="total"><span>Total</span><span>${total.toFixed(2)}</span></div>
+          <div><span>Subtotal</span><span>Rs{subtotal.toFixed(2)}</span></div>
+          <div><span>Delivery</span><span>Rs{delivery.toFixed(2)}</span></div>
+          <div><span>Tax (5%)</span><span>Rs{tax.toFixed(2)}</span></div>
+          <div className="total"><span>Total</span><span>Rs{total.toFixed(2)}</span></div>
         </div>
 
         <div className="bottom-nav">

@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function BuyerDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [userName, setUserName] = useState("Sarah");
+
+  // Fetch the dynamic user name when the page loads
+  useEffect(() => {
+    const storedName = localStorage.getItem("userFullName");
+    if (storedName) {
+      setUserName(storedName);
+    }
+  }, []);
 
   const products = [
-    { id: 1, name: "Sweet Corn", seller: "Green Valley Farm", price: "$2.50 / kg" },
-    { id: 2, name: "Fresh Strawberries", seller: "Berry Organic", price: "$4.00 / box" },
-    { id: 3, name: "Organic Potatoes", seller: "Farm Fresh", price: "$1.20 / kg" },
+    { id: 1, name: "Sweet Corn", seller: "Green Valley Farm", price: "Rs2.50 / kg" },
+    { id: 2, name: "Fresh Strawberries", seller: "Berry Organic", price: "Rs4.00 / box" },
+    { id: 3, name: "Organic Potatoes", seller: "Farm Fresh", price: "Rs1.20 / kg" },
   ];
 
   return (
@@ -156,7 +165,7 @@ export default function BuyerDashboard() {
         <div className="header">
           <div className="header-top">
             <div>
-              <h2>Hello, Sarah</h2>
+              <h2>Hello, {userName}</h2>
               <p>Find fresh products nearby</p>
             </div>
             <div>🛒 🔔</div>
@@ -174,10 +183,10 @@ export default function BuyerDashboard() {
         <section>
           <h3>Categories</h3>
           <div className="categories">
-            <div className="category">🥕<span>Veg</span></div>
-            <div className="category">🍎<span>Fruits</span></div>
-            <div className="category">🌾<span>Grains</span></div>
-            <div className="category">🥛<span>Dairy</span></div>
+            <div className="category"><span>Veg</span></div>
+            <div className="category"><span>Fruits</span></div>
+            <div className="category"><span>Grains</span></div>
+            <div className="category"><span>Dairy</span></div>
           </div>
         </section>
 
@@ -232,7 +241,7 @@ export default function BuyerDashboard() {
             <span>Orders</span>
           </div>
 
-          <div className="nav-item">
+          <div className="nav-item" onClick={() => navigate("/profile")}>
             <span className="icon">👤</span>
             <span>Profile</span>
           </div>

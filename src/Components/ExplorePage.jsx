@@ -164,25 +164,25 @@ export default function ExplorePage() {
           <div className="grid">
             <ProductCard
               title="Fresh Strawberries"
-              price="$4.50 / kg"
+              price="Rs4.50 / kg"
               rating="⭐ 4.9"
               img="https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6"
             />
             <ProductCard
               title="Sweet Corn"
-              price="$0.80 / ea"
+              price="Rs0.80 / ea"
               rating="⭐ 4.7"
               img="https://images.unsplash.com/photo-1592924357228-91a4daadcfea"
             />
             <ProductCard
               title="Cherry Tomatoes"
-              price="$3.20 / kg"
+              price="Rs3.20 / kg"
               rating="⭐ 4.8"
               img="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce"
             />
             <ProductCard
               title="Bell Peppers"
-              price="$2.50 / kg"
+              price="Rs2.50 / kg"
               rating="⭐ 4.5"
               img="https://images.unsplash.com/photo-1582284540020-8acbe03f4924"
             />

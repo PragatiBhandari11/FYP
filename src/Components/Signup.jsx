@@ -2,47 +2,68 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const SignUpPage = () => {
+  const navigate = useNavigate();
+
+  // Role state
+  const [role, setRole] = useState("Buyer");
+
+  // Form state (⬅️ THIS IS WHERE YOUR CODE GOES)
   const [form, setForm] = useState({
-    fullname: "",
+    fullName: "",
     email: "",
     phone: "",
     country: "",
-    role: "Buyer",
     password: "",
     confirmPassword: "",
   });
 
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
+  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSignUp = (e) => {
+  // Handle signup submit
+  const handleSignUp = async (e) => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+      alert("Passwords do not match");
       return;
     }
-    setError("");
 
-    alert(`Welcome ${form.fullname}! Your account has been created.`);
+    try {
+      const res = await fetch("http://localhost:5000/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          phone: form.phone,
+          country: form.country,
+          password: form.password,
+          role,
+        }),
+      });
 
-    // ✅ Navigation based on role
-    if (form.role === "Farmer") {
-      navigate("/farmer-dashboard");
-    } else if (form.role === "Expert") {
-      navigate("/expert-dashboard");
-    } else {
-      navigate("/buyer-dashboard");
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message);
+        return;
+      }
+
+      // Navigate by role after success
+      if (role === "Farmer") navigate("/farmer-dashboard");
+      else if (role === "Expert") navigate("/expert-dashboard");
+      else navigate("/buyer-dashboard");
+
+    } catch (error) {
+      alert("Server error ❌");
     }
   };
 
   return (
     <div style={styles.container}>
-      {/* Back Button */}
       <button onClick={() => navigate(-1)} style={styles.backButton}>
         ← Back
       </button>
@@ -54,9 +75,8 @@ const SignUpPage = () => {
           Full Name
           <input
             type="text"
-            name="fullname"
-            placeholder="Enter your full name"
-            value={form.fullname}
+            name="fullName"
+            value={form.fullName}
             onChange={handleChange}
             style={styles.input}
             required
@@ -68,7 +88,6 @@ const SignUpPage = () => {
           <input
             type="email"
             name="email"
-            placeholder="Enter your email"
             value={form.email}
             onChange={handleChange}
             style={styles.input}
@@ -81,11 +100,9 @@ const SignUpPage = () => {
           <input
             type="tel"
             name="phone"
-            placeholder="Enter your phone number"
             value={form.phone}
             onChange={handleChange}
             style={styles.input}
-            required
           />
         </label>
 
@@ -94,22 +111,18 @@ const SignUpPage = () => {
           <input
             type="text"
             name="country"
-            placeholder="Enter your country"
             value={form.country}
             onChange={handleChange}
             style={styles.input}
-            required
           />
         </label>
 
         <label style={styles.label}>
           Select Role
           <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            style={{ ...styles.input, paddingRight: 30 }}
-            required
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            style={{ ...styles.input, backgroundColor: "#fff" }}
           >
             <option value="Buyer">Buyer</option>
             <option value="Farmer">Farmer</option>
@@ -122,7 +135,6 @@ const SignUpPage = () => {
           <input
             type="password"
             name="password"
-            placeholder="Enter your password"
             value={form.password}
             onChange={handleChange}
             style={styles.input}
@@ -135,15 +147,12 @@ const SignUpPage = () => {
           <input
             type="password"
             name="confirmPassword"
-            placeholder="Confirm your password"
             value={form.confirmPassword}
             onChange={handleChange}
             style={styles.input}
             required
           />
         </label>
-
-        {error && <p style={styles.error}>{error}</p>}
 
         <button type="submit" style={styles.signUpButton}>
           Sign Up
@@ -162,58 +171,44 @@ const styles = {
     background: "#fff",
     borderRadius: 12,
     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-    position: "relative",
   },
-
   backButton: {
     border: "none",
     background: "transparent",
-    color: "#6a3cc9",
+    color: "#2e7d32",
     fontSize: 16,
     fontWeight: "600",
     cursor: "pointer",
     marginBottom: 10,
   },
-
   greeting: {
-    color: "#6a3cc9",
+    color: "#2e7d32",
     marginBottom: 20,
     fontWeight: "bold",
     fontSize: 24,
   },
-
   form: {
     display: "flex",
     flexDirection: "column",
   },
-
   label: {
     fontSize: 14,
     fontWeight: 600,
     marginBottom: 12,
-    color: "#555",
+    color: "#444",
     display: "flex",
     flexDirection: "column",
   },
-
   input: {
     marginTop: 6,
     padding: "10px 12px",
     fontSize: 16,
     borderRadius: 8,
-    border: "1px solid #ddd",
-    outline: "none",
-    boxSizing: "border-box",
+    border: "1px solid #c8e6c9",
+    backgroundColor: "#f1f8f4",
   },
-
-  error: {
-    color: "red",
-    marginBottom: 12,
-    fontWeight: "bold",
-  },
-
   signUpButton: {
-    backgroundColor: "#6a3cc9",
+    backgroundColor: "#2e7d32",
     color: "#fff",
     padding: "12px 0",
     border: "none",
@@ -221,7 +216,7 @@ const styles = {
     fontWeight: "bold",
     fontSize: 16,
     cursor: "pointer",
-    marginTop: 10,
+    marginTop: 15,
   },
 };
 

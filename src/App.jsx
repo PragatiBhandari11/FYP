@@ -10,6 +10,10 @@ import ExpertDashboard from "./Components/ExpertDashboard";
 import ExplorePage from "./Components/ExplorePage";
 import CartPage from "./Components/CartPage";
 import OrdersPage from "./Components/OrdersPage";
+import BuyerProfile from "./Components/BuyerProfile";
+import FarmerProfile from "./Components/FarmerProfile";
+import AddProduct from "./Components/AddProduct";
+// import MyProducts from "./MyProducts";
 
 
 
@@ -29,6 +33,8 @@ function App() {
         {/* Role Dashboards */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
+        <Route path="/add-product" element={<AddProduct />} />
+        {/* <Route path="/products" element={<MyProducts />} /> */}
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/buyer-cart" element={<CartPage />} />
@@ -37,6 +43,17 @@ function App() {
 
         {/* Buyer Explore */}
         <Route path="/buyer-explore" element={<ExplorePage />} />
+        
+        {/* Role-Specific Profiles */}
+        <Route path="/buyer-profile" element={<BuyerProfile />} />
+        <Route path="/farmer-profile" element={<FarmerProfile />} />
+        
+        {/* Fallback Smart Redirect for the old generic /profile link */}
+        <Route path="/profile" element={
+          localStorage.getItem("userRole")?.toLowerCase() === "farmer" 
+          ? <Navigate to="/farmer-profile" /> 
+          : <Navigate to="/buyer-profile" />
+        } />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
