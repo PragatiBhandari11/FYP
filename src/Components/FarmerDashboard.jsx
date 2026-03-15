@@ -47,10 +47,17 @@ export default function FarmerDashboard() {
           width: 390px;
           background: #f2fbf6;
           border-radius: 16px;
-          padding: 16px;
           box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-          overflow-y: auto;
+          overflow: hidden;
           max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .content-scroll {
+          flex: 1;
+          padding: 16px;
+          overflow-y: auto;
         }
 
         /* Header */
@@ -244,20 +251,23 @@ export default function FarmerDashboard() {
         .bottom-nav {
           display: flex;
           justify-content: space-around;
-          padding: 10px 0;
+          padding: 12px 0;
           border-top: 1px solid #e5e7eb;
           background: #fff;
-          margin-top: 16px;
-          position: sticky;
-          bottom: 0;
+          margin-top: auto;
         }
 
         .bottom-nav span {
-          font-size: 12px;
-          text-align: center;
-          color: #6b7280;
-          cursor: pointer;
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          gap: 4px; 
+          font-size: 13px; 
+          color: #6b7280; 
+          cursor: pointer; 
         }
+
+        .bottom-nav span .icon { font-size: 20px; line-height: 1; }
 
         .bottom-nav .active {
           color: #16a34a;
@@ -265,7 +275,8 @@ export default function FarmerDashboard() {
       `}</style>
 
       <div className="app">
-        {/* Header */}
+        <div className="content-scroll">
+          {/* Header */}
         <div className="header">
           <div className="profile">
             <div className="avatar">👤</div>
@@ -388,14 +399,25 @@ export default function FarmerDashboard() {
             <p>Urban Dine</p>
           </div>
         </div>
+        </div>
 
         {/* Bottom nav */}
         <div className="bottom-nav">
-          <span className="active" onClick={() => navigate("/farmer-dashboard")}>🏠<br />Home</span>
-          <span>🌱<br />Products</span>
-          <span>👥<br />Experts</span>
-          <span>📅<br />Calendar</span>
-          <span onClick={() => navigate("/profile")}>👤<br />Profile</span>
+          <span className="active" onClick={() => navigate("/farmer-dashboard")}>
+            <div className="icon">🏠</div>Home
+          </span>
+          <span onClick={() => navigate("/products")}>
+            <div className="icon">🌱</div>Products
+          </span>
+          <span onClick={() => navigate("/experts")}>
+            <div className="icon">👥</div>Experts
+          </span>
+          <span>
+            <div className="icon">📅</div>Calendar
+          </span>
+          <span onClick={() => navigate("/profile")}>
+            <div className="icon">👤</div>Profile
+          </span>
         </div>
       </div>
     </>

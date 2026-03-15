@@ -1,8 +1,46 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function ExplorePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialFilter = searchParams.get("category") || "All";
+  
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState(initialFilter);
+
+  const handleAddToCart = async (productId) => {
+    const buyerEmail = localStorage.getItem("userEmail");
+    if (!buyerEmail) {
+      alert("Please login to add items to cart.");
+      return;
+    }
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyerEmail, productId })
+      });
+      if (response.ok) alert("Added to cart!");
+    } catch (err) {
+      console.error("Cart error", err);
+    }
+  }
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/products")
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch products:", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <>
@@ -117,31 +155,37 @@ export default function ExplorePage() {
 
         /* Bottom Navigation */
         .bottom-nav {
-          margin-top: auto;
-          border-top: 1px solid #ddd;
           display: flex;
           justify-content: space-around;
           padding: 12px 0;
+          border-top: 1px solid #e5e7eb;
           background: #fff;
+          margin-top: auto;
         }
 
         .nav-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          font-size: 12px;
-          color: #666;
+          gap: 4px;
+          font-size: 13px;
+          color: #6b7280;
           cursor: pointer;
+        }
+
+        .nav-item .icon {
+          font-size: 20px;
+          line-height: 1;
         }
 
         .nav-item.active {
           color: #2e8b57;
-          font-weight: bold;
         }
       `}</style>
 
       <div className="app">
-        {/* Header */}
+        <div className="content-scroll">
+          {/* Header */}
         <div className="header">
           <h2>Explore Products</h2>
           <div className="search-bar">
@@ -154,65 +198,106 @@ export default function ExplorePage() {
         {/* Filters */}
         <section>
           <div className="filters">
-            <div className="chip active">All</div>
-            <div className="chip">Vegetables</div>
-            <div className="chip">Fruits</div>
-            <div className="chip">Organic</div>
+            <div 
+              className={`chip ${activeFilter === "All" ? "active" : ""}`}
+              onClick={() => { setActiveFilter("All"); setSearchParams({}); }}
+            >All</div>
+            <div 
+              className={`chip ${activeFilter === "vegetable" ? "active" : ""}`}
+              onClick={() => { setActiveFilter("vegetable"); setSearchParams({category: "vegetable"}); }}
+            >Vegetables</div>
+            <div 
+              className={`chip ${activeFilter === "fruits" ? "active" : ""}`}
+              onClick={() => { setActiveFilter("fruits"); setSearchParams({category: "fruits"}); }}
+            >Fruits</div>
+            <div 
+              className={`chip ${activeFilter === "dairy" ? "active" : ""}`}
+              onClick={() => { setActiveFilter("dairy"); setSearchParams({category: "dairy"}); }}
+            >Dairy</div>
+             <div 
+              className={`chip ${activeFilter === "plant" ? "active" : ""}`}
+              onClick={() => { setActiveFilter("plant"); setSearchParams({category: "plant"}); }}
+            >Plants</div>
           </div>
 
           {/* Products */}
-          <div className="grid">
-            <ProductCard
-              title="Fresh Strawberries"
-              price="Rs4.50 / kg"
-              rating="⭐ 4.9"
-              img="https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6"
-            />
-            <ProductCard
-              title="Sweet Corn"
-              price="Rs0.80 / ea"
-              rating="⭐ 4.7"
-              img="https://images.unsplash.com/photo-1592924357228-91a4daadcfea"
-            />
-            <ProductCard
-              title="Cherry Tomatoes"
-              price="Rs3.20 / kg"
-              rating="⭐ 4.8"
-              img="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce"
-            />
-            <ProductCard
-              title="Bell Peppers"
-              price="Rs2.50 / kg"
-              rating="⭐ 4.5"
-              img="https://images.unsplash.com/photo-1582284540020-8acbe03f4924"
-            />
-          </div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>Loading products...</div>
+          ) : (
+            <div className="grid">
+              {products
+                .filter(p => activeFilter === "All" ? true : p.category === activeFilter)
+                .length === 0 ? (
+                <div style={{ gridColumn: "span 2", textAlign: "center", color: "#666" }}>
+                  No products available in this category.
+                </div>
+              ) : (
+                products
+                  .filter(p => activeFilter === "All" ? true : p.category === activeFilter)
+                  .map((p) => (
+                    <div style={{ position: "relative" }} key={p.id}>
+                      <ProductCard
+                        title={p.name}
+                        price={`Rs${p.price}`}
+                        rating="⭐ 4.8"
+                        img={
+                           p.image_url
+                            ? `http://localhost:5000${p.image_url}`
+                            : "https://images.unsplash.com/photo-1592924357228-91a4daadcfea"
+                        }
+                      />
+                      <button 
+                        onClick={() => handleAddToCart(p.id)}
+                        style={{
+                          position: "absolute",
+                          bottom: "10px",
+                          right: "10px",
+                          background: "#16a34a",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "32px",
+                          height: "32px",
+                          fontSize: "18px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                        }}
+                      >+</button>
+                    </div>
+                ))
+              )}
+            </div>
+          )}
         </section>
+        </div>
 
         {/* Bottom Navigation */}
         <div className="bottom-nav">
           <div className="nav-item" onClick={() => navigate("/buyer-dashboard")}>
-            <span>🏠</span>
+            <span className="icon">🏠</span>
             <span>Home</span>
           </div>
 
           <div className="nav-item active">
-            <span>🔍</span>
+            <span className="icon">🔍</span>
             <span>Explore</span>
           </div>
 
-          <div className="nav-item"  onClick={() => navigate("/buyer-cart")}>
-            <span>🛒</span>
+          <div className="nav-item" onClick={() => navigate("/buyer-cart")}>
+            <span className="icon">🛒</span>
             <span>Cart</span>
           </div>
 
           <div className="nav-item" onClick={() => navigate("/buyer-orders")}>
-            <span>📦</span>
+            <span className="icon">📦</span>
             <span>Orders</span>
           </div>
 
-          <div className="nav-item">
-            <span>👤</span>
+          <div className="nav-item" onClick={() => navigate("/profile")}>
+            <span className="icon">👤</span>
             <span>Profile</span>
           </div>
         </div>

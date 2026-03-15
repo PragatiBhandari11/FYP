@@ -16,7 +16,8 @@ import AddProduct from "./Components/AddProduct";
 import CollaborationDetail from "./Components/CollaborationDetail";
 import WeatherDetail from "./Components/WeatherDetail";
 import ExpertProfile from "./Components/ExpertProfile";
-// import MyProducts from "./MyProducts";
+import FarmerProductPage from "./Components/FarmerProductPage";
+import FarmerExpertPage from "./Components/FarmerExpertPage";
 
 
 
@@ -39,7 +40,8 @@ function App() {
         <Route path="/add-product" element={<AddProduct />} />
         <Route path="/collaboration/:id" element={<CollaborationDetail />} />
         <Route path="/weather-detail" element={<WeatherDetail />} />
-        {/* <Route path="/products" element={<MyProducts />} /> */}
+        <Route path="/products" element={<FarmerProductPage />} />
+        <Route path="/experts" element={<FarmerExpertPage />} />
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/buyer-cart" element={<CartPage />} />

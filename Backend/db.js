@@ -42,18 +42,54 @@ db.connect((err) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
-
   // Products table
   const productTable = `
     CREATE TABLE IF NOT EXISTS products (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
-      category VARCHAR(255) NOT NULL,
-      price_per_kg DECIMAL(10,2) NOT NULL,
+      category VARCHAR(100) NOT NULL,
+      price DECIMAL(10, 2) NOT NULL,
       quantity INT NOT NULL,
-      image_path VARCHAR(255),
-      farmer_id VARCHAR(100),
+      farmer_id VARCHAR(100) NOT NULL,
+      image_url VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  // Cart tracking table
+  const cartTable = `
+    CREATE TABLE IF NOT EXISTS cart_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      buyer_email VARCHAR(100) NOT NULL,
+      product_id INT NOT NULL,
+      quantity INT DEFAULT 1,
+      added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `;
+
+  // Orders Table (High level metadata)
+  const ordersTable = `
+     CREATE TABLE IF NOT EXISTS orders (
+       id INT AUTO_INCREMENT PRIMARY KEY,
+       order_number VARCHAR(50) NOT NULL UNIQUE,
+       buyer_email VARCHAR(100) NOT NULL,
+       total_amount DECIMAL(10,2) NOT NULL,
+       status VARCHAR(50) DEFAULT 'Order Placed',
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+     )
+  `;
+
+  // Order Items Table (Snapshot of product data at time of purchase)
+  const orderItemsTable = `
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id INT NOT NULL,
+      product_id INT NOT NULL,
+      product_name VARCHAR(255) NOT NULL,
+      price_at_purchase DECIMAL(10,2) NOT NULL,
+      quantity INT NOT NULL,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
     )
   `;
 
@@ -104,6 +140,29 @@ db.connect((err) => {
             });
           }
         });
+    }
+  });
+
+  // Create cart table
+  db.query(cartTable, (err) => {
+    if (err) {
+      console.error("❌ Failed to create cart table:", err.message);
+    } else {
+      console.log("✅ cart table ready");
+    }
+  });
+
+  // Create orders tables
+  db.query(ordersTable, (err) => {
+    if (err) {
+      console.error("❌ Failed to create orders table:", err.message);
+    } else {
+      console.log("✅ orders table ready");
+      // Create sub-items table ONLY after parent orders table successfully exists
+      db.query(orderItemsTable, (err2) => {
+         if (err2) console.error("❌ Failed to create order_items table:", err2.message);
+         else console.log("✅ order_items table ready");
+      });
     }
   });
 

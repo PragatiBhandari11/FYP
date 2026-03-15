@@ -1,42 +1,76 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function CartPage() {
   const navigate = useNavigate();
 
-  const [cart, setCart] = useState([
-    {
-      id: 1,
-      name: "Fresh Strawberries",
-      seller: "Berry Farm",
-      price: 9.0,
-      qty: 2,
-      img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6",
-    },
-    {
-      id: 2,
-      name: "Sweet Corn",
-      seller: "Green Valley",
-      price: 4.0,
-      qty: 5,
-      img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea",
-    },
-  ]);
-
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [payment, setPayment] = useState("card");
 
-  const updateQty = (id, delta) => {
-    setCart(cart =>
-      cart.map(item =>
-        item.id === id
-          ? { ...item, qty: Math.max(1, item.qty + delta) }
-          : item
-      )
-    );
+  const buyerEmail = localStorage.getItem("userEmail");
+
+  const fetchCart = async () => {
+    if (!buyerEmail) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/cart/${buyerEmail}`);
+      const data = await res.json();
+      setCart(data);
+    } catch (err) {
+      console.error("Cart fetch error", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const subtotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-  const delivery = 2.5;
+  useEffect(() => {
+    fetchCart();
+  }, [buyerEmail]);
+
+  const updateQty = async (cartId, delta) => {
+    try {
+      await fetch("http://localhost:5000/api/cart/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartId, delta })
+      });
+      // Refresh cart visually after database update
+      fetchCart();
+    } catch (err) {
+      console.error("Failed to update cart quantity", err);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (cart.length === 0) return alert("Your cart is empty!");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/orders/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          buyerEmail, 
+          totalAmount: total.toFixed(2) 
+        })
+      });
+
+      if (response.ok) {
+        navigate("/buyer-orders"); // Transparently move the user directly to the new Orders Tracker UI!
+      } else {
+        const err = await response.json();
+        alert(err.message || "Checkout failed");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+    }
+  };
+
+  // Ensure calculations correctly parse database decimal strings
+  const subtotal = cart.reduce((sum, i) => sum + (parseFloat(i.price) * i.qty), 0);
+  const delivery = cart.length > 0 ? 2.5 : 0;
   const tax = subtotal * 0.05;
   const total = subtotal + delivery + tax;
 
@@ -47,13 +81,20 @@ export default function CartPage() {
         body { background: #f2f2f2; }
 
         .app {
-          max-width: 390px;
+          width: 390px;
           margin: auto;
           background: #fff;
           min-height: 100vh;
           border-radius: 24px;
           display: flex;
           flex-direction: column;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+
+        .content-scroll {
+          flex: 1;
+          overflow-y: auto;
         }
 
         .header {
@@ -126,56 +167,87 @@ export default function CartPage() {
           font-size: 18px;
         }
 
+        .checkout-btn {
+          width: 100%;
+          padding: 16px;
+          background: #2e8b57;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: bold;
+          cursor: pointer;
+          margin-top: 15px;
+        }
+
         .bottom-nav {
-          margin-top: auto;
           display: flex;
           justify-content: space-around;
-          border-top: 1px solid #ddd;
           padding: 12px 0;
+          border-top: 1px solid #e5e7eb;
+          background: #fff;
+          margin-top: auto;
         }
 
         .nav-item {
-          font-size: 12px;
-          text-align: center;
-          color: #666;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
+          color: #6b7280;
           cursor: pointer;
+        }
+
+        .nav-item .icon {
+          font-size: 20px;
+          line-height: 1;
         }
 
         .nav-item.active {
           color: #2e8b57;
-          font-weight: bold;
         }
       `}</style>
 
       <div className="app">
+        <div className="content-scroll">
         <div className="header">My Cart</div>
 
-        {cart.map(item => (
-          <div className="item" key={item.id}>
-            <img src={item.img} alt={item.name} />
-            <div className="item-info">
-              <strong>{item.name}</strong>
-              <p>{item.seller}</p>
-              <strong>Rs{item.price.toFixed(2)}</strong>
-            </div>
-            <div className="qty">
-              <button onClick={() => updateQty(item.id, -1)}>-</button>
-              {item.qty}
-              <button onClick={() => updateQty(item.id, 1)}>+</button>
-            </div>
+        {loading ? (
+          <div style={{textAlign: "center", padding: "40px"}}>Loading cart...</div>
+        ) : cart.length === 0 ? (
+          <div style={{textAlign: "center", padding: "40px", color: "#666"}}>
+            <div style={{fontSize: "40px", marginBottom: "16px"}}>🛒</div>
+            Your cart is currently empty.
           </div>
-        ))}
+        ) : (
+          cart.map(item => (
+            <div className="item" key={item.cart_id}>
+              <img src={item.image_url ? `http://localhost:5000${item.image_url}` : "https://via.placeholder.com/60"} alt={item.name} />
+              <div className="item-info">
+                <strong>{item.name}</strong>
+                <p style={{margin: "4px 0", fontSize: "12px", color: "#666"}}>Seller ID: {item.farmer_id}</p>
+                <strong>Rs{parseFloat(item.price).toFixed(2)}</strong>
+              </div>
+              <div className="qty">
+                <button onClick={() => updateQty(item.cart_id, -1)}>-</button>
+                {item.qty}
+                <button onClick={() => updateQty(item.cart_id, 1)}>+</button>
+              </div>
+            </div>
+          ))
+        )}
 
         <div className="section">
           <h4>Payment Method</h4>
           <div
-            className={`payment Rs{payment === "card" ? "active" : ""}`}
+            className={`payment ${payment === "card" ? "active" : ""}`}
             onClick={() => setPayment("card")}
           >
-            Visa ending in 4242 ✓
+            eSewa
           </div>
           <div
-            className={`payment Rs{payment === "cash" ? "active" : ""}`}
+            className={`payment ${payment === "cash" ? "active" : ""}`}
             onClick={() => setPayment("cash")}
           >
             Cash on Delivery
@@ -188,14 +260,42 @@ export default function CartPage() {
           <div><span>Delivery</span><span>Rs{delivery.toFixed(2)}</span></div>
           <div><span>Tax (5%)</span><span>Rs{tax.toFixed(2)}</span></div>
           <div className="total"><span>Total</span><span>Rs{total.toFixed(2)}</span></div>
+          <button 
+            className="checkout-btn" 
+            onClick={handleCheckout}
+            disabled={cart.length === 0}
+          >
+            Place Order
+          </button>
+        </div>
+
         </div>
 
         <div className="bottom-nav">
-          <div className="nav-item" onClick={() => navigate("/buyer-dashboard")}>🏠<br/>Home</div>
-          <div className="nav-item" onClick={() => navigate("/buyer-explore")}>🔍<br/>Explore</div>
-          <div className="nav-item active">🛒<br/>Cart</div>
-          <div className="nav-item" onClick={() => navigate("/buyer-orders")}>📦<br/>Orders</div>
-          <div className="nav-item">👤<br/>Profile</div>
+          <div className="nav-item" onClick={() => navigate("/buyer-dashboard")}>
+            <span className="icon">🏠</span>
+            <span>Home</span>
+          </div>
+
+          <div className="nav-item" onClick={() => navigate("/buyer-explore")}>
+            <span className="icon">🔍</span>
+            <span>Explore</span>
+          </div>
+
+          <div className="nav-item active">
+            <span className="icon">🛒</span>
+            <span>Cart</span>
+          </div>
+
+          <div className="nav-item" onClick={() => navigate("/buyer-orders")}>
+            <span className="icon">📦</span>
+            <span>Orders</span>
+          </div>
+
+          <div className="nav-item" onClick={() => navigate("/profile")}>
+            <span className="icon">👤</span>
+            <span>Profile</span>
+          </div>
         </div>
       </div>
     </>

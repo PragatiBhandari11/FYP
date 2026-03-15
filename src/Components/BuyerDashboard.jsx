@@ -14,11 +14,33 @@ export default function BuyerDashboard() {
     }
   }, []);
 
-  const products = [
-    { id: 1, name: "Sweet Corn", seller: "Green Valley Farm", price: "Rs2.50 / kg" },
-    { id: 2, name: "Fresh Strawberries", seller: "Berry Organic", price: "Rs4.00 / box" },
-    { id: 3, name: "Organic Potatoes", seller: "Farm Fresh", price: "Rs1.20 / kg" },
-  ];
+  const handleAddToCart = async (productId) => {
+    const buyerEmail = localStorage.getItem("userEmail");
+    if (!buyerEmail) {
+      alert("Please login to add items to cart.");
+      return;
+    }
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyerEmail, productId })
+      });
+      if (response.ok) alert("Added to cart!");
+    } catch (err) {
+      console.error("Cart error", err);
+    }
+  }
+
+  const [dbProducts, setDbProducts] = useState([]);
+  
+  useEffect(() => {
+    fetch("http://localhost:5000/api/products")
+      .then(res => res.json())
+      .then(data => setDbProducts(data))
+      .catch(err => console.error(err));
+  }, []);
 
   return (
     <>
@@ -33,7 +55,7 @@ export default function BuyerDashboard() {
         }
 
         .app {
-          max-width: 390px;
+          width: 390px;
           margin: auto;
           background: #fff;
           min-height: 100vh;
@@ -41,6 +63,12 @@ export default function BuyerDashboard() {
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .content-scroll {
+          flex: 1;
+          overflow-y: auto;
         }
 
         .header {
@@ -82,6 +110,7 @@ export default function BuyerDashboard() {
           align-items: center;
           justify-content: center;
           font-size: 20px;
+          cursor: pointer;
         }
 
         .category span {
@@ -132,36 +161,37 @@ export default function BuyerDashboard() {
 
         /* Bottom Navigation */
         .bottom-nav {
-          margin-top: auto;
-          border-top: 1px solid #ddd;
           display: flex;
           justify-content: space-around;
           padding: 12px 0;
+          border-top: 1px solid #e5e7eb;
           background: #fff;
+          margin-top: auto;
         }
 
         .nav-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          font-size: 12px;
-          color: #666;
+          gap: 4px;
+          font-size: 13px;
+          color: #6b7280;
           cursor: pointer;
         }
 
         .nav-item .icon {
           font-size: 20px;
-          margin-bottom: 4px;
+          line-height: 1;
         }
 
         .nav-item.active {
           color: #2e8b57;
-          font-weight: bold;
         }
       `}</style>
 
       <div className="app">
-        {/* Header */}
+        <div className="content-scroll">
+          {/* Header */}
         <div className="header">
           <div className="header-top">
             <div>
@@ -183,10 +213,10 @@ export default function BuyerDashboard() {
         <section>
           <h3>Categories</h3>
           <div className="categories">
-            <div className="category"><span>Veg</span></div>
-            <div className="category"><span>Fruits</span></div>
-            <div className="category"><span>Grains</span></div>
-            <div className="category"><span>Dairy</span></div>
+            <div className="category" onClick={() => navigate("/buyer-explore?category=vegetable")}><span>Veg</span></div>
+            <div className="category" onClick={() => navigate("/buyer-explore?category=fruits")}><span>Fruits</span></div>
+            <div className="category" onClick={() => navigate("/buyer-explore?category=plant")}><span>Plants</span></div>
+            <div className="category" onClick={() => navigate("/buyer-explore?category=dairy")}><span>Dairy</span></div>
           </div>
         </section>
 
@@ -205,19 +235,23 @@ export default function BuyerDashboard() {
         {/* Products */}
         <section>
           <h3>Featured Products</h3>
-          {products
-            .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-            .map(p => (
-              <div className="product" key={p.id}>
-                <div>
-                  <strong>{p.name}</strong>
-                  <p>{p.seller}</p>
-                  <div className="price">{p.price}</div>
+          {dbProducts.length === 0 ? <p>Loading products...</p> : (
+            dbProducts
+              .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+              .slice(0, 3) // Only show top 3 on dashboard
+              .map(p => (
+                <div className="product" key={p.id}>
+                  <div>
+                    <strong>{p.name}</strong>
+                    <p style={{fontSize: "12px", color: "#666"}}>Fresh Category</p>
+                    <div className="price">Rs{p.price}</div>
+                  </div>
+                  <button className="add" onClick={() => handleAddToCart(p.id)}>+</button>
                 </div>
-                <button className="add">+</button>
-              </div>
-            ))}
+              ))
+          )}
         </section>
+        </div>
 
         {/* Bottom Navigation */}
         <div className="bottom-nav">

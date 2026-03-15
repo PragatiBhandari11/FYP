@@ -1,35 +1,94 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const db = require("../db");
+
 const router = express.Router();
 
-// Configure storage for images
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, "../uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+// Configure Multer for image uploads
 const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, "prod_" + Date.now() + path.extname(file.originalname));
-  }
+  destination: function (req, file, cb) {
+    cb(null, uploadDir); // Store images in the generic 'uploads' folder
+  },
+  filename: function (req, file, cb) {
+    // Unique filename using timestamp
+    cb(null, `product-${Date.now()}${path.extname(file.originalname)}`);
+  },
 });
+
 const upload = multer({ storage: storage });
 
 // ADD PRODUCT ROUTE
 router.post("/add-product", upload.single("image"), (req, res) => {
-  const { name, price, quantity, farmerId, category } = req.body;
-  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  const { name, category, price, quantity, farmerId } = req.body;
 
-  if (!name || !price || !quantity || !category) {
-    return res.status(400).json({ message: "All fields are required" });
+  // Basic validation
+  if (!name || !category || !price || !quantity || !farmerId) {
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const sql = "INSERT INTO products (farmer_id, name, category, price_per_kg, quantity, image_path) VALUES (?, ?, ?, ?, ?, ?)";
+  // Define image URL if a file was uploaded
+  // Note: the frontend will fetch from http://localhost:5000/uploads/filename.ext
+  const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+  const sql = `
+    INSERT INTO products (name, category, price, quantity, farmer_id, image_url)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [name, category, price, quantity, farmerId, imageUrl],
+    (err, result) => {
+      if (err) {
+        console.error("❌ Add product error:", err.message);
+        return res
+          .status(500)
+          .json({ message: `Database error: ${err.message}` });
+      }
+
+      res.status(201).json({
+        message: "Product added successfully ✅",
+        productId: result.insertId,
+      });
+    }
+  );
+});
+
+// GET ALL PRODUCTS (Global Feed)
+router.get("/products", (req, res) => {
+  const sql = "SELECT * FROM products ORDER BY created_at DESC";
   
-  db.query(sql, [farmerId, name, category, price, quantity, imagePath], (err, result) => {
+  db.query(sql, (err, results) => {
     if (err) {
-      console.error(err);
+      console.error("❌ Fetch all products error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
-    res.status(200).json({ message: "Product added successfully! ✅" });
+
+    res.status(200).json(results);
+  });
+});
+
+// GET PRODUCTS BY FARMER ID
+router.get("/products/farmer/:farmerId", (req, res) => {
+  const { farmerId } = req.params;
+
+  const sql = "SELECT * FROM products WHERE farmer_id = ? ORDER BY created_at DESC";
+  
+  db.query(sql, [farmerId], (err, results) => {
+    if (err) {
+      console.error("❌ Fetch products error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.status(200).json(results);
   });
 });
 

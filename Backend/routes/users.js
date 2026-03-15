@@ -41,6 +41,20 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+// GET ALL EXPERTS
+router.get("/experts", (req, res) => {
+  const sql = "SELECT id, full_name, email, phone, country, city FROM users WHERE role = 'Expert'";
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("❌ Fetch experts error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+    
+    res.status(200).json(results);
+  });
+});
+
 // GET USER PROFILE BY EMAIL
 router.get("/user/:email", (req, res) => {
   const { email } = req.params;
