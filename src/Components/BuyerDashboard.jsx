@@ -34,12 +34,25 @@ export default function BuyerDashboard() {
   }
 
   const [dbProducts, setDbProducts] = useState([]);
+  const [latestOrder, setLatestOrder] = useState(null);
   
   useEffect(() => {
     fetch("http://localhost:5000/api/products")
       .then(res => res.json())
       .then(data => setDbProducts(data))
       .catch(err => console.error(err));
+
+    const buyerEmail = localStorage.getItem("userEmail");
+    if (buyerEmail) {
+      fetch(`http://localhost:5000/api/orders/${buyerEmail}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            setLatestOrder(data[0]);
+          }
+        })
+        .catch(err => console.error("Error fetching latest order:", err));
+    }
   }, []);
 
   return (
@@ -206,7 +219,17 @@ export default function BuyerDashboard() {
             placeholder="Search vegetables, fruits..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && search.trim()) {
+                navigate(`/buyer-explore?search=${encodeURIComponent(search.trim())}`);
+              }
+            }}
           />
+          {search.trim() && (
+            <div style={{ fontSize: "12px", marginTop: "8px", textAlign: "right", cursor: "pointer" }} onClick={() => navigate(`/buyer-explore?search=${encodeURIComponent(search.trim())}`)}>
+              Press Enter or click here to view all results &rarr;
+            </div>
+          )}
         </div>
 
         {/* Categories */}
@@ -223,12 +246,21 @@ export default function BuyerDashboard() {
         {/* Order Status */}
         <section>
           <h3>Order Status</h3>
-          <div className="order">
-            <div>
-              <strong>Out for Delivery</strong>
-              <p>Arriving by 5:00 PM</p>
-            </div>
-            <div className="track">Track</div>
+          <div className="order" style={{ cursor: "pointer" }} onClick={() => navigate("/buyer-orders")}>
+            {latestOrder ? (
+              <>
+                <div>
+                  <strong>{latestOrder.status === "Pending" ? "Order Received" : latestOrder.status === "Packing" ? "Packing Order" : latestOrder.status === "Shipped" ? "Moving for Delivery" : "Delivered"}</strong>
+                  <p>Order ID: {latestOrder.order_number}</p>
+                </div>
+                <div className="track">Track</div>
+              </>
+            ) : (
+              <div>
+                <strong>No active orders</strong>
+                <p>Browse products to place an order</p>
+              </div>
+            )}
           </div>
         </section>
 

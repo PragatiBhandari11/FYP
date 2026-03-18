@@ -26,7 +26,7 @@ router.post("/signup", async (req, res) => {
       [fullName, email, phone, country, city, role, hashedPassword],
       (err, result) => {
         if (err) {
-          console.error("❌ Signup error:", err.message);
+          console.error(" Signup error:", err.message);
           return res.status(500).json({ message: `Database error: ${err.message}` });
         }
 
@@ -47,7 +47,7 @@ router.get("/experts", (req, res) => {
   
   db.query(sql, (err, results) => {
     if (err) {
-      console.error("❌ Fetch experts error:", err.message);
+      console.error(" Fetch experts error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
     
@@ -63,7 +63,7 @@ router.get("/user/:email", (req, res) => {
   
   db.query(sql, [email], (err, result) => {
     if (err) {
-      console.error("❌ Fetch user error:", err.message);
+      console.error(" Fetch user error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
 

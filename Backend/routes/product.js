@@ -48,14 +48,14 @@ router.post("/add-product", upload.single("image"), (req, res) => {
     [name, category, price, quantity, farmerId, imageUrl],
     (err, result) => {
       if (err) {
-        console.error("❌ Add product error:", err.message);
+        console.error(" Add product error:", err.message);
         return res
           .status(500)
           .json({ message: `Database error: ${err.message}` });
       }
 
       res.status(201).json({
-        message: "Product added successfully ✅",
+        message: "Product added successfully ",
         productId: result.insertId,
       });
     }
@@ -68,7 +68,7 @@ router.get("/products", (req, res) => {
   
   db.query(sql, (err, results) => {
     if (err) {
-      console.error("❌ Fetch all products error:", err.message);
+      console.error("Fetch all products error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
 
@@ -84,7 +84,7 @@ router.get("/products/farmer/:farmerId", (req, res) => {
   
   db.query(sql, [farmerId], (err, results) => {
     if (err) {
-      console.error("❌ Fetch products error:", err.message);
+      console.error(" Fetch products error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
 

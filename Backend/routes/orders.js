@@ -63,9 +63,9 @@ router.post("/checkout", (req, res) => {
                 return db.rollback(() => res.status(500).json({ message: "Transaction commit failed." }));
               }
 
-              res.status(201).json({ 
-                message: "Order placed successfully!", 
-                orderNumber: orderNumber 
+              res.status(201).json({
+                message: "Order placed successfully!",
+                orderNumber: orderNumber
               });
             });
           });
@@ -74,7 +74,6 @@ router.post("/checkout", (req, res) => {
     });
   });
 });
-
 // 2. FETCH ALL ORDERS FOR A BUYER
 router.get("/:email", (req, res) => {
   const { email } = req.params;
@@ -83,6 +82,28 @@ router.get("/:email", (req, res) => {
   db.query(sql, [email], (err, results) => {
     if (err) {
       console.error("❌ Fetch orders error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// 3. FETCH ORDERS FOR A FARMER (Products belonging to them)
+router.get("/farmer/:farmerId", (req, res) => {
+  const { farmerId } = req.params;
+
+  const sql = `
+    SELECT oi.*, o.order_number, o.created_at, o.status, p.image_url
+    FROM order_items oi
+    JOIN orders o ON oi.order_id = o.id
+    JOIN products p ON oi.product_id = p.id
+    WHERE p.farmer_id = ?
+    ORDER BY o.created_at DESC
+  `;
+
+  db.query(sql, [farmerId], (err, results) => {
+    if (err) {
+      console.error("❌ Fetch farmer orders error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
     res.status(200).json(results);

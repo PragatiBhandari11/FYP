@@ -5,10 +5,12 @@ export default function ExplorePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = searchParams.get("category") || "All";
+  const initialSearch = searchParams.get("search") || "";
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(initialFilter);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
 
   const handleAddToCart = async (productId) => {
     const buyerEmail = localStorage.getItem("userEmail");
@@ -190,7 +192,18 @@ export default function ExplorePage() {
           <h2>Explore Products</h2>
           <div className="search-bar">
             🔍
-            <input placeholder="Search products, farmers..." />
+            <input 
+              placeholder="Search products, farmers..." 
+              value={searchQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchQuery(val);
+                const newParams = new URLSearchParams(searchParams);
+                if (val) newParams.set("search", val);
+                else newParams.delete("search");
+                setSearchParams(newParams);
+              }}
+            />
             ⚙️
           </div>
         </div>
@@ -200,23 +213,48 @@ export default function ExplorePage() {
           <div className="filters">
             <div 
               className={`chip ${activeFilter === "All" ? "active" : ""}`}
-              onClick={() => { setActiveFilter("All"); setSearchParams({}); }}
+              onClick={() => { 
+                setActiveFilter("All"); 
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete("category");
+                setSearchParams(newParams);
+              }}
             >All</div>
             <div 
               className={`chip ${activeFilter === "vegetable" ? "active" : ""}`}
-              onClick={() => { setActiveFilter("vegetable"); setSearchParams({category: "vegetable"}); }}
+              onClick={() => { 
+                setActiveFilter("vegetable"); 
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set("category", "vegetable");
+                setSearchParams(newParams); 
+              }}
             >Vegetables</div>
             <div 
               className={`chip ${activeFilter === "fruits" ? "active" : ""}`}
-              onClick={() => { setActiveFilter("fruits"); setSearchParams({category: "fruits"}); }}
+              onClick={() => { 
+                setActiveFilter("fruits"); 
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set("category", "fruits");
+                setSearchParams(newParams); 
+              }}
             >Fruits</div>
             <div 
               className={`chip ${activeFilter === "dairy" ? "active" : ""}`}
-              onClick={() => { setActiveFilter("dairy"); setSearchParams({category: "dairy"}); }}
+              onClick={() => { 
+                setActiveFilter("dairy"); 
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set("category", "dairy");
+                setSearchParams(newParams); 
+              }}
             >Dairy</div>
              <div 
               className={`chip ${activeFilter === "plant" ? "active" : ""}`}
-              onClick={() => { setActiveFilter("plant"); setSearchParams({category: "plant"}); }}
+              onClick={() => { 
+                setActiveFilter("plant"); 
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set("category", "plant");
+                setSearchParams(newParams); 
+              }}
             >Plants</div>
           </div>
 
@@ -227,13 +265,15 @@ export default function ExplorePage() {
             <div className="grid">
               {products
                 .filter(p => activeFilter === "All" ? true : p.category === activeFilter)
+                .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 .length === 0 ? (
                 <div style={{ gridColumn: "span 2", textAlign: "center", color: "#666" }}>
-                  No products available in this category.
+                  No products found.
                 </div>
               ) : (
                 products
                   .filter(p => activeFilter === "All" ? true : p.category === activeFilter)
+                  .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
                   .map((p) => (
                     <div style={{ position: "relative" }} key={p.id}>
                       <ProductCard

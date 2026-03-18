@@ -239,22 +239,23 @@ export default function OrdersPage() {
                     
                     <div className="progress-bar">
                       <div className="progress-line"></div>
-                      <div className="progress-step">
-                        <div className="dot active"></div>
-                        <div className="step-label active">Order Placed</div>
-                      </div>
-                      <div className="progress-step">
-                        <div className="dot active"></div>
-                        <div className="step-label active">Packed</div>
-                      </div>
-                      <div className="progress-step">
-                        <div className="dot active"></div>
-                        <div className="step-label active">Shipped</div>
-                      </div>
-                      <div className="progress-step">
-                        <div className="dot active"></div>
-                        <div className="step-label active">Out for Delivery</div>
-                      </div>
+                      {[
+                        { label: "Ordered", status: "Pending" },
+                        { label: "Packing", status: "Packing" },
+                        { label: "Moving", status: "Shipped" },
+                        { label: "Delivered", status: "Delivered" }
+                      ].map((step, index, array) => {
+                        const statuses = ["Pending", "Packing", "Shipped", "Delivered"];
+                        const currentStatusIndex = statuses.indexOf(currentOrder.status) === -1 ? 0 : statuses.indexOf(currentOrder.status);
+                        const isActive = index <= currentStatusIndex;
+                        
+                        return (
+                          <div className="progress-step" key={step.label}>
+                            <div className={`dot ${isActive ? "active" : ""}`}></div>
+                            <div className={`step-label ${isActive ? "active" : ""}`}>{step.label}</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </>

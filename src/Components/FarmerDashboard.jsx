@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 export default function FarmerDashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("");
+  const [farmerId, setFarmerId] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [weather, setWeather] = useState({ temp: "--", condition: "Loading..." });
 
   useEffect(() => {
@@ -15,13 +18,25 @@ export default function FarmerDashboard() {
       .then(res => res.json())
       .then(user => {
         setUserName(user.full_name);
+        setFarmerId(user.id);
         if (user.city) {
-          // Fetch weather for that city
           fetch(`http://localhost:5000/api/weather/${user.city}`)
             .then(res => res.json())
             .then(data => setWeather(data))
             .catch(err => console.error("Weather fetch error:", err));
         }
+
+        // Fetch Orders for this Farmer
+        fetch(`http://localhost:5000/api/orders/farmer/${user.id}`)
+          .then(res => res.json())
+          .then(data => {
+            setOrders(data);
+            setLoadingOrders(false);
+          })
+          .catch(err => {
+            console.error("Farmer orders fetch error:", err);
+            setLoadingOrders(false);
+          });
       });
   }, []);
 
@@ -297,7 +312,7 @@ export default function FarmerDashboard() {
           </div>
           <div className="stat-card">
             <div>Orders</div>
-            <h4>18</h4>
+            <h4>{orders.length}</h4>
             <div className="yellow">Pending</div>
           </div>
           <div className="stat-card">
@@ -312,7 +327,7 @@ export default function FarmerDashboard() {
           <div className="action" onClick={() => navigate("/add-product")} style={{cursor: "pointer"}}>
             <div>＋</div>Add Product
           </div>
-          <div className="action"><div>🧾</div>View Orders</div>
+          <div className="action" onClick={() => navigate("/farmer-orders")} style={{cursor: "pointer"}}><div>🧾</div>View Orders</div>
           <div className="action"><div>🚜</div>My Farm</div>
           <div className="action"><div>👤</div>Add Expert</div>
         </div>
@@ -334,39 +349,30 @@ export default function FarmerDashboard() {
         {/* Recent Orders */}
         <div className="section-title">Recent Orders</div>
 
-        <div className="order-card">
-          <img
-            className="order-img"
-            src="https://images.unsplash.com/photo-1582515073490-39981397c445"
-            alt="Potatoes"
-          />
-          <div className="order-info">
-            <strong>Fresh Carrot</strong>
-            <div>50 kg • Order #2049</div>
-            <strong>Rs120.00</strong>
-          </div>
-          <div className="order-actions">
-            <button className="reject">Reject</button>
-            <button className="accept">Accept</button>
-          </div>
-        </div>
-
-        {/* <div className="order-card">
-          <img
-            className="order-img"
-            src="https://images.unsplash.com/photo-1546470427-f5d84a6f99c4"
-            alt="Tomatoes"
-          />
-          <div className="order-info">
-            <strong>Red Tomatoes</strong>
-            <div>30 kg • Order #2048</div>
-            <strong>$85.50</strong>
-          </div>
-          <div className="order-actions">
-            <button className="reject">Reject</button>
-            <button className="accept">Accept</button>
-          </div>
-        </div> */}
+        {loadingOrders ? (
+          <p style={{fontSize: "14px", color: "#666"}}>Loading orders...</p>
+        ) : orders.length === 0 ? (
+          <p style={{fontSize: "14px", color: "#666"}}>No recent orders.</p>
+        ) : (
+          orders.slice(0, 3).map(order => (
+            <div className="order-card" key={order.id}>
+              <img
+                className="order-img"
+                src={order.image_url ? `http://localhost:5000${order.image_url}` : "https://images.unsplash.com/photo-1582515073490-39981397c445"}
+                alt={order.product_name}
+              />
+              <div className="order-info">
+                <strong>{order.product_name}</strong>
+                <div>{order.quantity} units • {order.order_number}</div>
+                <strong>Rs{order.price_at_purchase * order.quantity}</strong>
+              </div>
+              <div className="order-actions">
+                <button className="reject">Reject</button>
+                <button className="accept">Accept</button>
+              </div>
+            </div>
+          ))
+        )}
 
         {/* Collaborations */}
         <div className="section-title">Collaborations</div>

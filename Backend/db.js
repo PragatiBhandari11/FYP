@@ -10,11 +10,11 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error("❌ MySQL connection failed:", err.message);
+    console.error(" MySQL connection failed:", err.message);
     return;
   }
 
-  console.log("✅ MySQL connected to agro_connect");
+  console.log(" MySQL connected to agro_connect");
 
   // Farmers table
   const createFarmersTable = `
@@ -96,26 +96,26 @@ db.connect((err) => {
   // Create farmers table
   db.query(createFarmersTable, (err) => {
     if (err) {
-      console.error("❌ Failed to create farmers table:", err.message);
+      console.error(" Failed to create farmers table:", err.message);
     } else {
-      console.log("✅ farmers table ready");
+      console.log(" farmers table ready");
     }
   });
 
   // Create users table
   db.query(usersTable, (err) => {
     if (err) {
-      console.error("❌ Failed to create users table:", err.message);
+      console.error(" Failed to create users table:", err.message);
     } else {
-      console.log("✅ users table ready");
+      console.log(" users table ready");
         // Robust Migration: Check if column exists, then add if missing
         const checkCitySql = "SHOW COLUMNS FROM users LIKE 'city'";
         db.query(checkCitySql, (checkErr, results) => {
-          if (checkErr) return console.error("❌ Column check error:", checkErr.message);
+          if (checkErr) return console.error(" Column check error:", checkErr.message);
           if (results.length === 0) {
             db.query("ALTER TABLE users ADD COLUMN city VARCHAR(50)", (alterErr) => {
-              if (alterErr) console.error("❌ Migration error (users):", alterErr.message);
-              else console.log("✅ Added city column to users table");
+              if (alterErr) console.error(" Migration error (users):", alterErr.message);
+              else console.log(" Added city column to users table");
             });
           }
         });
@@ -125,18 +125,18 @@ db.connect((err) => {
   // Create products table
   db.query(productTable, (err) => {
     if (err) {
-      console.error("❌ Failed to create products table:", err.message);
+      console.error(" Failed to create products table:", err.message);
     } else {
-      console.log("✅ products table ready");
+      console.log(" products table ready");
 
         // Robust Migration: Check if column exists, then add if missing
         const checkFarmerIdSql = "SHOW COLUMNS FROM products LIKE 'farmer_id'";
         db.query(checkFarmerIdSql, (checkErr, results) => {
-          if (checkErr) return console.error("❌ Column check error:", checkErr.message);
+          if (checkErr) return console.error(" Column check error:", checkErr.message);
           if (results.length === 0) {
             db.query("ALTER TABLE products ADD COLUMN farmer_id VARCHAR(100)", (alterErr) => {
-              if (alterErr) console.error("❌ Migration error (products):", alterErr.message);
-              else console.log("✅ Added farmer_id column to products table");
+              if (alterErr) console.error(" Migration error (products):", alterErr.message);
+              else console.log(" Added farmer_id column to products table");
             });
           }
         });
@@ -146,22 +146,22 @@ db.connect((err) => {
   // Create cart table
   db.query(cartTable, (err) => {
     if (err) {
-      console.error("❌ Failed to create cart table:", err.message);
+      console.error("Failed to create cart table:", err.message);
     } else {
-      console.log("✅ cart table ready");
+      console.log(" cart table ready");
     }
   });
 
   // Create orders tables
   db.query(ordersTable, (err) => {
     if (err) {
-      console.error("❌ Failed to create orders table:", err.message);
+      console.error(" Failed to create orders table:", err.message);
     } else {
-      console.log("✅ orders table ready");
+      console.log("orders table ready");
       // Create sub-items table ONLY after parent orders table successfully exists
       db.query(orderItemsTable, (err2) => {
-         if (err2) console.error("❌ Failed to create order_items table:", err2.message);
-         else console.log("✅ order_items table ready");
+         if (err2) console.error(" Failed to create order_items table:", err2.message);
+         else console.log(" order_items table ready");
       });
     }
   });

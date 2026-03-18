@@ -18,6 +18,7 @@ import WeatherDetail from "./Components/WeatherDetail";
 import ExpertProfile from "./Components/ExpertProfile";
 import FarmerProductPage from "./Components/FarmerProductPage";
 import FarmerExpertPage from "./Components/FarmerExpertPage";
+import FarmerOrdersPage from "./Components/FarmerOrdersPage";
 
 
 
@@ -42,6 +43,7 @@ function App() {
         <Route path="/weather-detail" element={<WeatherDetail />} />
         <Route path="/products" element={<FarmerProductPage />} />
         <Route path="/experts" element={<FarmerExpertPage />} />
+        <Route path="/farmer-orders" element={<FarmerOrdersPage />} />
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/buyer-cart" element={<CartPage />} />
