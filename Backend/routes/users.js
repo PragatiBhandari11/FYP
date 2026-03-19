@@ -8,6 +8,10 @@ const router = express.Router();
 router.post("/signup", async (req, res) => {
   const { fullName, email, phone, country, city, role, password } = req.body;
 
+  if (role === "Admin") {
+    return res.status(403).json({ message: "Admin accounts cannot be created via signup." });
+  }
+
   if (!fullName || !email || !password || !role) {
     return res.status(400).json({ message: "Missing required fields" });
   }

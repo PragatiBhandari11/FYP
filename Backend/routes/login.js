@@ -1,43 +1,110 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const db = require("../db");
+
 const router = express.Router();
-const db = require('../db'); // Path to your db connection file
 
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    
-    // Check if user exists in your MySQL table
-    const sql = "SELECT * FROM users WHERE email = ?";
-    db.query(sql, [email], async (err, result) => {
-        if (err) return res.status(500).json({ error: "Database error" });
-        
-        if (result.length > 0) {
-            const user = result[0];
+// SIGN UP USER
+router.post("/signup", async (req, res) => {
+  const { fullName, email, phone, country, city, role, password } = req.body;
 
-            // 1. Try checking against old plain-text passwords (Legacy fallback)
-            let isMatch = false;
-            if (password === user.password) {
-                isMatch = true;
-            } 
-            // 2. Try checking against newly encrypted bcrypt passwords
-            else {
-                isMatch = await bcrypt.compare(password, user.password);
-            }
+  if (role === "Admin") {
+    return res.status(403).json({ message: "Admin accounts cannot be created via signup." });
+  }
 
-            if (isMatch) {
-                // Send back success and role (e.g., 'expert', 'buyer')
-                res.json({ 
-                    success: true, 
-                    role: user.role, 
-                    user: { fullName: user.full_name } 
-                });
-            } else {
-                res.status(401).json({ message: "Invalid email or password" });
-            }
-        } else {
-            res.status(401).json({ message: "Invalid email or password" });
+  if (!fullName || !email || !password || !role) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Auto-approve Buyers, Farmers/Experts need manual approval
+    const isApproved = (role === "Buyer") ? 1 : 0;
+
+    const sql = "INSERT INTO users (full_name, email, phone, country, city, role, password, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+    db.query(
+      sql,
+      [fullName, email, phone, country, city, role, hashedPassword, isApproved],
+      (err, result) => {
+        if (err) {
+          console.error(" Signup error:", err.message);
+          return res.status(500).json({ message: `Database error: ${err.message}` });
         }
-    });
+
+        res.status(201).json({
+          message: "User registered successfully ✅",
+          userId: result.insertId,
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-module.exports = router; // This line is vital for Server.js to see this file
+// GET ALL EXPERTS
+router.get("/experts", (req, res) => {
+  const sql = "SELECT id, full_name, email, phone, country, city FROM users WHERE role = 'Expert'";
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error(" Fetch experts error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+    
+    res.status(200).json(results);
+  });
+});
+
+// GET USER PROFILE BY EMAIL
+router.get("/user/:email", (req, res) => {
+  const { email } = req.params;
+
+  const sql = "SELECT full_name, email, phone, country, city, role, created_at FROM users WHERE email = ?";
+  
+  db.query(sql, [email], (err, result) => {
+    if (err) {
+      console.error(" Fetch user error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return the user data (without password)
+    res.status(200).json(result[0]);
+  });
+});
+
+// GET ALL USERS (For Admin)
+router.get("/admin/users", (req, res) => {
+  const sql = "SELECT id, full_name, email, role, is_approved, created_at FROM users WHERE role != 'Admin'";
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
+// APPROVE USER
+router.put("/admin/users/:id/approve", (req, res) => {
+  const sql = "UPDATE users SET is_approved = 1 WHERE id = ?";
+  db.query(sql, [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "User approved successfully" });
+  });
+});
+
+// DELETE USER
+router.delete("/admin/users/:id", (req, res) => {
+  const sql = "DELETE FROM users WHERE id = ?";
+  db.query(sql, [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "User removed successfully" });
+  });
+});
+
+module.exports = router;

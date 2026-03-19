@@ -37,8 +37,9 @@ db.connect((err) => {
       phone VARCHAR(20),
       country VARCHAR(50),
       city VARCHAR(50),
-      role ENUM('Buyer','Farmer','Expert') NOT NULL,
+      role ENUM('Buyer','Farmer','Expert','Admin') NOT NULL,
       password VARCHAR(255) NOT NULL,
+      is_approved TINYINT(1) DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -108,17 +109,6 @@ db.connect((err) => {
       console.error(" Failed to create users table:", err.message);
     } else {
       console.log(" users table ready");
-        // Robust Migration: Check if column exists, then add if missing
-        const checkCitySql = "SHOW COLUMNS FROM users LIKE 'city'";
-        db.query(checkCitySql, (checkErr, results) => {
-          if (checkErr) return console.error(" Column check error:", checkErr.message);
-          if (results.length === 0) {
-            db.query("ALTER TABLE users ADD COLUMN city VARCHAR(50)", (alterErr) => {
-              if (alterErr) console.error(" Migration error (users):", alterErr.message);
-              else console.log(" Added city column to users table");
-            });
-          }
-        });
     }
   });
 
@@ -128,7 +118,6 @@ db.connect((err) => {
       console.error(" Failed to create products table:", err.message);
     } else {
       console.log(" products table ready");
-
         // Robust Migration: Check if column exists, then add if missing
         const checkFarmerIdSql = "SHOW COLUMNS FROM products LIKE 'farmer_id'";
         db.query(checkFarmerIdSql, (checkErr, results) => {
@@ -163,6 +152,29 @@ db.connect((err) => {
          if (err2) console.error(" Failed to create order_items table:", err2.message);
          else console.log(" order_items table ready");
       });
+    }
+  });
+
+  // Collaborations Table
+  const collaborationsTable = `
+    CREATE TABLE IF NOT EXISTS collaborations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      type ENUM('Hotel', 'Restaurant', 'Other') NOT NULL,
+      description TEXT,
+      image_url VARCHAR(255),
+      location VARCHAR(255),
+      contact VARCHAR(100),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  // Create collaborations table
+  db.query(collaborationsTable, (err) => {
+    if (err) {
+      console.error(" Failed to create collaborations table:", err.message);
+    } else {
+      console.log(" collaborations table ready");
     }
   });
 

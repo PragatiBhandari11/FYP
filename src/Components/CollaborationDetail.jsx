@@ -1,44 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-// Static collaboration data (extend as needed)
-const collaborations = {
-  1: {
-    name: "Green Valley Hotel",
-    address: "123 Green Valley Road, Kathmandu, Nepal",
-    phone: "+977-01-4567890",
-    email: "contact@greenvalleyhotel.com",
-    type: "5-Star Hotel",
-    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-    description:
-      "Green Valley Hotel sources fresh organic produce directly from local farmers. They are interested in seasonal vegetables and fruits.",
-  },
-  2: {
-    name: "The Fresh Table",
-    address: "45 Foodie Lane, Pokhara, Nepal",
-    phone: "+977-61-5234567",
-    email: "hello@thefreshatable.com",
-    type: "Farm-to-Table Restaurant",
-    image: "https://images.unsplash.com/photo-1552566626-52f8b828add9",
-    description:
-      "A farm-to-table restaurant committed to using only locally grown ingredients for their seasonal menu.",
-  },
-  3: {
-    name: "Urban Dine",
-    address: "78 City Center, Lalitpur, Nepal",
-    phone: "+977-01-5501234",
-    email: "orders@urbandine.com",
-    type: "Urban Bistro",
-    image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1",
-    description:
-      "Urban Dine specializes in contemporary cuisine with a strong preference for fresh, chemical-free produce.",
-  },
+const defaultCollab = {
+  name: "Loading...",
+  address: "Searching...",
+  phone: "...",
+  email: "...",
+  type: "...",
+  image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+  description: "Please wait while we fetch the details."
 };
 
 export default function CollaborationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const collab = collaborations[id];
+  const [collab, setCollab] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [messages, setMessages] = useState([
     {
@@ -51,6 +28,19 @@ export default function CollaborationDetail() {
   const messagesEndRef = useRef(null);
 
   const farmerName = localStorage.getItem("userFullName") || "Farmer";
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/collaborations/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        setCollab(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Collab detail fetch error:", err);
+        setLoading(false);
+      });
+  }, [id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,6 +74,8 @@ export default function CollaborationDetail() {
       ]);
     }, 1200);
   };
+
+  if (loading) return <div style={{textAlign: 'center', padding: 50}}>Loading partner details...</div>;
 
   if (!collab) {
     return (
@@ -323,7 +315,7 @@ export default function CollaborationDetail() {
 
         {/* Hotel info card */}
         <div className="hotel-card">
-          <img className="hotel-image" src={collab.image} alt={collab.name} />
+          <img className="hotel-image" src={collab.image_url ? `http://localhost:5000${collab.image_url}` : "https://images.unsplash.com/photo-1566073771259-6a8506099945"} alt={collab.name} />
           <div className="hotel-body">
             <span className="hotel-badge">{collab.type}</span>
             <h3>{collab.name}</h3>
@@ -331,15 +323,15 @@ export default function CollaborationDetail() {
             <div className="contact-list">
               <div className="contact-item">
                 <div className="contact-icon">📍</div>
-                <span>{collab.address}</span>
+                <span>{collab.location}</span>
               </div>
               <div className="contact-item">
                 <div className="contact-icon">📞</div>
-                <span>{collab.phone}</span>
+                <span>{collab.contact}</span>
               </div>
               <div className="contact-item">
                 <div className="contact-icon">✉️</div>
-                <span>{collab.email}</span>
+                <span>Email inquiry sent</span>
               </div>
             </div>
           </div>

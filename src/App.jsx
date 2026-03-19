@@ -19,6 +19,8 @@ import ExpertProfile from "./Components/ExpertProfile";
 import FarmerProductPage from "./Components/FarmerProductPage";
 import FarmerExpertPage from "./Components/FarmerExpertPage";
 import FarmerOrdersPage from "./Components/FarmerOrdersPage";
+import AdminDashboard from "./Components/AdminDashboard";
+
 
 
 
@@ -46,7 +48,9 @@ function App() {
         <Route path="/farmer-orders" element={<FarmerOrdersPage />} />
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/buyer-cart" element={<CartPage />} />
+
         <Route path="/buyer-orders" element={<OrdersPage />} />
 
 
@@ -60,10 +64,13 @@ function App() {
 
         {/* Fallback Smart Redirect for the old generic /profile link */}
         <Route path="/profile" element={
-          localStorage.getItem("userRole")?.toLowerCase() === "farmer"
+          localStorage.getItem("userRole")?.toLowerCase() === "admin"
+            ? <Navigate to="/admin-dashboard" />
+            : localStorage.getItem("userRole")?.toLowerCase() === "farmer"
             ? <Navigate to="/farmer-profile" />
             : <Navigate to="/buyer-profile" />
         } />
+
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

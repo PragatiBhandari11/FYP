@@ -8,6 +8,8 @@ const loginRoute = require('./routes/login');
 const weatherRoutes = require("./routes/weather");
 const cartRoutes = require("./routes/cart"); 
 const ordersRoutes = require("./routes/orders");
+const collabRoutes = require("./routes/collaborations");
+
 
 const app = express();
 const PORT = 5000;
@@ -25,6 +27,8 @@ app.use('/api', userRoutes);
 app.use('/api', weatherRoutes);
 app.use('/api/cart', cartRoutes); 
 app.use('/api/orders', ordersRoutes);
+app.use('/api/collaborations', collabRoutes);
+
 
 
 app.listen(PORT, () => {

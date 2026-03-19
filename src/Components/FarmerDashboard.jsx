@@ -8,6 +8,7 @@ export default function FarmerDashboard() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [weather, setWeather] = useState({ temp: "--", condition: "Loading..." });
+  const [collabs, setCollabs] = useState([]);
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -37,6 +38,12 @@ export default function FarmerDashboard() {
             console.error("Farmer orders fetch error:", err);
             setLoadingOrders(false);
           });
+
+        // Fetch Collaborations
+        fetch("http://localhost:5000/api/collaborations")
+          .then(res => res.json())
+          .then(data => setCollabs(data))
+          .catch(err => console.error("Collabs fetch error:", err));
       });
   }, []);
 
@@ -378,32 +385,20 @@ export default function FarmerDashboard() {
         <div className="section-title">Collaborations</div>
 
         <div className="collab-list">
-          <div className="collab-card" onClick={() => navigate("/collaboration/1")} style={{cursor:"pointer"}}>
-            <img
-              className="collab-img"
-              src="https://images.unsplash.com/photo-1566073771259-6a8506099945"
-              alt="Hotel"
-            />
-            <p>Green Valley Hotel</p>
-          </div>
-
-          <div className="collab-card" onClick={() => navigate("/collaboration/2")} style={{cursor:"pointer"}}>
-            <img
-              className="collab-img"
-              src="https://images.unsplash.com/photo-1552566626-52f8b828add9"
-              alt="Restaurant"
-            />
-            <p>The Fresh Table</p>
-          </div>
-
-          <div className="collab-card" onClick={() => navigate("/collaboration/3")} style={{cursor:"pointer"}}>
-            <img
-              className="collab-img"
-              src="https://images.unsplash.com/photo-1528605248644-14dd04022da1"
-              alt="Urban Dine"
-            />
-            <p>Urban Dine</p>
-          </div>
+          {collabs.length === 0 ? (
+            <p style={{fontSize: "12px", color: "#666"}}>Looking for new partnerships...</p>
+          ) : (
+            collabs.map(c => (
+              <div className="collab-card" key={c.id} onClick={() => navigate(`/collaboration/${c.id}`)} style={{cursor:"pointer"}}>
+                <img
+                  className="collab-img"
+                  src={c.image_url ? `http://localhost:5000${c.image_url}` : "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
+                  alt={c.name}
+                />
+                <p>{c.name}</p>
+              </div>
+            ))
+          )}
         </div>
         </div>
 
