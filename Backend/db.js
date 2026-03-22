@@ -109,6 +109,16 @@ db.connect((err) => {
       console.error(" Failed to create users table:", err.message);
     } else {
       console.log(" users table ready");
+      // Migration: Add is_approved if it doesn't exist
+      db.query("SHOW COLUMNS FROM users LIKE 'is_approved'", (err, results) => {
+        if (err) return console.error(" Column check error (users):", err.message);
+        if (results.length === 0) {
+          db.query("ALTER TABLE users ADD COLUMN is_approved TINYINT(1) DEFAULT 0", (alterErr) => {
+            if (alterErr) console.error(" Migration error (users):", alterErr.message);
+            else console.log(" Added is_approved column to users table");
+          });
+        }
+      });
     }
   });
 
@@ -169,12 +179,72 @@ db.connect((err) => {
     )
   `;
 
+  // Demands Table (Buyer Alerts)
+  const demandsTable = `
+    CREATE TABLE IF NOT EXISTS demands (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      buyer_email VARCHAR(100) NOT NULL,
+      product_name VARCHAR(255) NOT NULL,
+      quantity VARCHAR(100),
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
   // Create collaborations table
   db.query(collaborationsTable, (err) => {
     if (err) {
       console.error(" Failed to create collaborations table:", err.message);
     } else {
       console.log(" collaborations table ready");
+    }
+  });
+
+  // Create demands table
+  db.query(demandsTable, (err) => {
+    if (err) {
+      console.error(" Failed to create demands table:", err.message);
+    } else {
+      console.log(" demands table ready");
+    }
+  });
+  
+  // SEED ADMIN USER IF NOT EXISTS
+  const adminEmail = "admin@gmail.com";
+  db.query("SELECT * FROM users WHERE email = ?", [adminEmail], async (err, results) => {
+    if (err) return console.error(" Admin check error:", err.message);
+    if (results.length === 0) {
+      const bcrypt = require("bcryptjs");
+      const hashedPassword = await bcrypt.hash("admin", 10);
+      const insertAdminSql = `
+        INSERT INTO users (full_name, email, phone, country, city, role, password, is_approved)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      db.query(insertAdminSql, ["System Admin", adminEmail, "0000000000", "Nepal", "Kathmandu", "Admin", hashedPassword, 1], (insertErr) => {
+        if (insertErr) console.error(" Admin seeding failed:", insertErr.message);
+        else console.log(" Admin user seeded successfully! (admin@gmail.com / admin)");
+      });
+    } else {
+      console.log(" Admin user already exists. Forcing role to Admin...");
+      db.query("UPDATE users SET role = 'Admin', is_approved = 1 WHERE email = ?", [adminEmail], (updateErr) => {
+        if (updateErr) console.error(" Failed to update admin role:", updateErr.message);
+        else console.log(" Admin role ensured for admin@gmail.com.");
+      });
+    }
+  });
+
+  // Ensure 'Admin' is in the role enum (This fix ensures existing tables support the "Admin" role)
+  const alterEnumSql = "ALTER TABLE users MODIFY COLUMN role ENUM('Buyer','Farmer','Expert','Admin') NOT NULL";
+  db.query(alterEnumSql, (err) => {
+    if (err) {
+      if (err.code === 'ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_HIDDEN') {
+        // Fallback for some systems if ALTER is restrictive
+        console.warn(" Warning: ENUM update restricted, using existing definition.");
+      } else {
+        console.error(" ENUM update failed:", err.message);
+      }
+    } else {
+      console.log(" ENUM role verified and updated (Admin supported).");
     }
   });
 

@@ -6,22 +6,14 @@ export default function FarmerOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchOrders = () => {
     const email = localStorage.getItem("userEmail");
     if (!email) {
       setLoading(false);
       return;
     }
-
-    // First fetch user to get ID
-    fetch(`http://localhost:5000/api/user/${email}`)
-      .then(res => res.json())
-      .then(user => {
-        if (user.id) {
-          return fetch(`http://localhost:5000/api/orders/farmer/${user.id}`);
-        }
-        throw new Error("User ID not found");
-      })
+    setLoading(true);
+    fetch(`http://localhost:5000/api/orders/farmer/${email}`)
       .then(res => res.json())
       .then(data => {
         setOrders(data);
@@ -31,7 +23,26 @@ export default function FarmerOrdersPage() {
         console.error("Farmer orders fetch error:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, []);
+
+  const updateOrderStatus = (orderId, newStatus) => {
+    if (!newStatus) return;
+    fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      fetchOrders();
+    })
+    .catch(err => console.error("Update status error:", err));
+  };
 
   return (
     <>
@@ -145,10 +156,12 @@ export default function FarmerOrdersPage() {
           font-weight: bold;
         }
 
-        .status-Pending { background: #fff3cd; color: #856404; }
+        .status-OrderPlaced { background: #e2e3e5; color: #383d41; }
+        .status-Accepted { background: #d4edda; color: #155724; }
         .status-Packing { background: #d1ecf1; color: #0c5460; }
-        .status-Shipped { background: #cce5ff; color: #004085; }
-        .status-Delivered { background: #d4edda; color: #155724; }
+        .status-OutforDelivery { background: #fff3cd; color: #856404; }
+        .status-Delivered { background: #c3e6cb; color: #1e7d34; }
+        .status-Cancelled { background: #f8d7da; color: #721c24; }
 
         .empty-state {
           text-align: center;
@@ -197,18 +210,27 @@ export default function FarmerOrdersPage() {
                   </div>
                 </div>
                 <div className="order-footer">
-                   <div className={`status-badge status-${order.status}`}>{order.status}</div>
-                   <button style={{
-                     padding: "6px 12px",
-                     borderRadius: "6px",
-                     border: "1px solid #2e8b57",
-                     background: "none",
-                     color: "#2e8b57",
-                     fontSize: "12px",
-                     cursor: "pointer"
-                   }}>
-                     Update Status
-                   </button>
+                   <div className={`status-badge status-${order.status.replace(/\s+/g, '')}`}>{order.status}</div>
+                   <div style={{display: "flex", gap: "8px"}}>
+                     <select 
+                       defaultValue={order.status}
+                       onChange={(e) => updateOrderStatus(order.order_id, e.target.value)}
+                       style={{
+                         padding: "6px",
+                         borderRadius: "6px",
+                         border: "1px solid #2e8b57",
+                         fontSize: "12px",
+                         outline: "none"
+                       }}
+                     >
+                       <option value="Order Placed">Order Placed</option>
+                       <option value="Accepted">Accepted</option>
+                       <option value="Packing">Packing</option>
+                       <option value="Out for Delivery">Out for Delivery</option>
+                       <option value="Delivered">Delivered</option>
+                       <option value="Cancelled">Cancelled</option>
+                     </select>
+                   </div>
                 </div>
               </div>
             ))

@@ -9,6 +9,7 @@ const weatherRoutes = require("./routes/weather");
 const cartRoutes = require("./routes/cart"); 
 const ordersRoutes = require("./routes/orders");
 const collabRoutes = require("./routes/collaborations");
+const demandsRoutes = require("./routes/demands");
 
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api', weatherRoutes);
 app.use('/api/cart', cartRoutes); 
 app.use('/api/orders', ordersRoutes);
 app.use('/api/collaborations', collabRoutes);
+app.use('/api/demands', demandsRoutes);
 
 
 

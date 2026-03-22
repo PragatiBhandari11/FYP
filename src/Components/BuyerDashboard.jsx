@@ -5,6 +5,8 @@ export default function BuyerDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [userName, setUserName] = useState("Sarah");
+  const [demand, setDemand] = useState({ name: "", quantity: "", description: "" });
+  const [submittingDemand, setSubmittingDemand] = useState(false);
 
   // Fetch the dynamic user name when the page loads
   useEffect(() => {
@@ -30,6 +32,34 @@ export default function BuyerDashboard() {
       if (response.ok) alert("Added to cart!");
     } catch (err) {
       console.error("Cart error", err);
+    }
+  }
+
+  const handleDemandSubmit = async (e) => {
+    e.preventDefault();
+    const buyerEmail = localStorage.getItem("userEmail");
+    if (!buyerEmail) { alert("Login requested"); return; }
+    
+    setSubmittingDemand(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/demands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buyerEmail,
+          productName: demand.name,
+          quantity: demand.quantity,
+          description: demand.description
+        })
+      });
+      if (response.ok) {
+        alert("Demand alert sent! 📢");
+        setDemand({ name: "", quantity: "", description: "" });
+      }
+    } catch (err) {
+      console.error("Demand error", err);
+    } finally {
+      setSubmittingDemand(false);
     }
   }
 
@@ -241,6 +271,55 @@ export default function BuyerDashboard() {
             <div className="category" onClick={() => navigate("/buyer-explore?category=plant")}><span>Plants</span></div>
             <div className="category" onClick={() => navigate("/buyer-explore?category=dairy")}><span>Dairy</span></div>
           </div>
+        </section>
+
+        {/* Demand Alert Section */}
+        <section style={{ background: "#fdf8e6", margin: "16px", borderRadius: "16px", padding: "16px" }}>
+          <h3 style={{ margin: "0 0 10px 0" }}>📢 Demand Alert</h3>
+          <p style={{ fontSize: "12px", color: "#666", marginBottom: "12px" }}>Can't find what you need? Tell local farmers what you're looking for.</p>
+          <form onSubmit={handleDemandSubmit}>
+             <input 
+               type="text" 
+               placeholder="Product Name (e.g. Organic Ginger)" 
+               value={demand.name}
+               onChange={(e) => setDemand({...demand, name: e.target.value})}
+               style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", marginBottom: "8px", fontSize: "14px" }}
+               required
+             />
+             <div style={{ display: "flex", gap: "8px" }}>
+               <input 
+                 type="text" 
+                 placeholder="Quantity (e.g. 50kg)" 
+                 value={demand.quantity}
+                 onChange={(e) => setDemand({...demand, quantity: e.target.value})}
+                 style={{ width: "40%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", marginBottom: "8px", fontSize: "14px" }}
+               />
+               <input 
+                 type="text" 
+                 placeholder="Notes (Deadline, etc.)" 
+                 value={demand.description}
+                 onChange={(e) => setDemand({...demand, description: e.target.value})}
+                 style={{ width: "60%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", marginBottom: "8px", fontSize: "14px" }}
+               />
+             </div>
+             <button 
+               type="submit" 
+               disabled={submittingDemand}
+               style={{
+                 width: "100%",
+                 padding: "10px",
+                 background: "#d97706",
+                 color: "white",
+                 border: "none",
+                 borderRadius: "8px",
+                 fontWeight: "bold",
+                 cursor: "pointer",
+                 opacity: submittingDemand ? 0.7 : 1
+               }}
+             >
+               {submittingDemand ? "Sending..." : "Submit Demand Alert"}
+             </button>
+          </form>
         </section>
 
         {/* Order Status */}

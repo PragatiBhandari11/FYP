@@ -237,26 +237,31 @@ export default function OrdersPage() {
                     <div className="status-highlight">{currentOrder.status}</div>
                     <div className="eta">ETA: Today, 5:00 PM</div>
                     
-                    <div className="progress-bar">
-                      <div className="progress-line"></div>
-                      {[
-                        { label: "Ordered", status: "Pending" },
-                        { label: "Packing", status: "Packing" },
-                        { label: "Moving", status: "Shipped" },
-                        { label: "Delivered", status: "Delivered" }
-                      ].map((step, index, array) => {
-                        const statuses = ["Pending", "Packing", "Shipped", "Delivered"];
-                        const currentStatusIndex = statuses.indexOf(currentOrder.status) === -1 ? 0 : statuses.indexOf(currentOrder.status);
-                        const isActive = index <= currentStatusIndex;
-                        
-                        return (
-                          <div className="progress-step" key={step.label}>
-                            <div className={`dot ${isActive ? "active" : ""}`}></div>
-                            <div className={`step-label ${isActive ? "active" : ""}`}>{step.label}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {currentOrder.status === "Cancelled" ? (
+                      <div style={{color: "red", fontWeight: "bold", margin: "10px 0"}}>This order has been cancelled.</div>
+                    ) : (
+                      <div className="progress-bar">
+                        <div className="progress-line"></div>
+                        {[
+                          { label: "Placed", status: "Order Placed" },
+                          { label: "Accepted", status: "Accepted" },
+                          { label: "Packing", status: "Packing" },
+                          { label: "Moving", status: "Out for Delivery" },
+                          { label: "Done", status: "Delivered" }
+                        ].map((step, index) => {
+                          const statuses = ["Order Placed", "Accepted", "Packing", "Out for Delivery", "Delivered"];
+                          const currentStatusIndex = statuses.indexOf(currentOrder.status);
+                          const isActive = index <= currentStatusIndex && currentStatusIndex !== -1;
+                          
+                          return (
+                            <div className="progress-step" key={step.label}>
+                              <div className={`dot ${isActive ? "active" : ""}`}></div>
+                              <div className={`step-label ${isActive ? "active" : ""}`}>{step.label}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </>
               )}

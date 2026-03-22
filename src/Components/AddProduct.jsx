@@ -5,7 +5,7 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
-    category: "vegetable",
+    category: "Vegetable",
     price: "",
     quantity: "",
     image: null,
@@ -57,7 +57,7 @@ export default function AddProduct() {
 
       if (response.ok) {
         setSuccess("Product added successfully!");
-        setFormData({ name: "", category: "vegetable", price: "", quantity: "", image: null }); // Reset form
+        setFormData({ name: "", category: "Vegetable", price: "", quantity: "", image: null }); // Reset form
         e.target.reset(); // clear the file input visually
       } else {
         setError(result.message || "Failed to add product");
@@ -141,10 +141,10 @@ export default function AddProduct() {
           <div className="form-group">
             <label>Category</label>
             <select name="category" value={formData.category} onChange={handleChange} required>
-              <option value="fruits">Fruits</option>
-              <option value="vegetable">Vegetable</option>
-              <option value="dairy">Dairy</option>
-              <option value="plant">Plant</option>
+              <option value="Vegetable">Vegetable</option>
+              <option value="Fruits">Fruits</option>
+              <option value="Dairy">Dairy</option>
+              <option value="Plant">Plant</option>
             </select>
           </div>
 

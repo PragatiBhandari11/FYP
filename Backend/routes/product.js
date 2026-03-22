@@ -62,9 +62,14 @@ router.post("/add-product", upload.single("image"), (req, res) => {
   );
 });
 
-// GET ALL PRODUCTS (Global Feed)
+// GET ALL PRODUCTS (Global Feed) - Joined with users to get farmer name
 router.get("/products", (req, res) => {
-  const sql = "SELECT * FROM products ORDER BY created_at DESC";
+  const sql = `
+    SELECT p.*, u.full_name AS farmer_name 
+    FROM products p 
+    LEFT JOIN users u ON p.farmer_id = u.email 
+    ORDER BY p.created_at DESC
+  `;
   
   db.query(sql, (err, results) => {
     if (err) {

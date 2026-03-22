@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate(); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -16,20 +18,32 @@ const response = await fetch("http://localhost:5000/api/login", {
 });
 
     const data = await response.json();
+    console.log("Login full Response:", data);
 
     if (response.ok) {
-      alert(`Welcome back, ${data.user.fullName}!`);
+      // DEBUG: Let's see what the role actually is
+      // alert(`Welcome back ${data.user.fullName}! Role: ${data.role}`); 
 
-      // FIX IS HERE: Save user data so the Dashboard & Profile can use it
       localStorage.setItem("userFullName", data.user.fullName);
       localStorage.setItem("userEmail", email);
-      localStorage.setItem("userRole", data.role);
+      localStorage.setItem("userRole", data.role || (data.user && data.user.role) || "Buyer");
 
-      // Convert "Buyer" to "buyer", "Farmer" to "farmer", etc.
-      const dashboardRole = data.role.toLowerCase(); 
+      // REDIRECT LOGIC BASED ON ROLE (Robust)
+      const roleToUse = data.role || (data.user && data.user.role) || "Buyer";
+      const userRole = roleToUse.toLowerCase().trim();
       
-      // Now it redirects to /buyer-dashboard instead of /Buyer-dashboard
-      window.location.href = `/${dashboardRole}-dashboard`; 
+      console.log("Redirecting for role:", userRole);
+      
+      if (userRole === "admin") {
+        navigate("/admin-dashboard");
+      } else if (userRole === "farmer") {
+        navigate("/farmer-dashboard");
+      } else if (userRole === "expert") {
+        navigate("/expert-dashboard");
+      } else {
+        // Includes "buyer" and unknown roles
+        navigate("/buyer-dashboard");
+      }
       
     } else {
       alert(data.message);

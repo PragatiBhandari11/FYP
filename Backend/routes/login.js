@@ -59,6 +59,69 @@ router.get("/experts", (req, res) => {
   });
 });
 
+// LOGIN USER
+router.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  // HARDCODED ADMIN CHECK (Bypasses DB/Schema issues)
+  if (email === "admin@gmail.com" && password === "admin") {
+      console.log(" Admin hardcoded login triggered successfully.");
+      return res.status(200).json({
+          message: "Admin Login successful ✅",
+          user: {
+              id: 0,
+              fullName: "System Admin",
+              email: "admin@gmail.com",
+          },
+          role: "Admin",
+      });
+  }
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  const sql = "SELECT * FROM users WHERE email = ?";
+  db.query(sql, [email], async (err, result) => {
+    if (err) {
+      console.error(" Login error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (result.length === 0) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const user = result[0];
+
+    // Check if account is approved (Farmers/Experts need approval)
+    if (user.is_approved === 0 && user.role !== "Buyer" && user.role !== "Admin") {
+      return res.status(403).json({ message: "Your account is pending admin approval." });
+    }
+
+    // Compare password
+    try {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Successful login
+      res.status(200).json({
+        message: "Login successful ✅",
+        user: {
+          id: user.id,
+          fullName: user.full_name,
+          email: user.email,
+        },
+        role: user.role, // Dashboard redirect depends on this
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error comparing passwords" });
+    }
+  });
+});
+
 // GET USER PROFILE BY EMAIL
 router.get("/user/:email", (req, res) => {
   const { email } = req.params;

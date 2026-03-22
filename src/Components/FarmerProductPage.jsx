@@ -6,6 +6,10 @@ export default function FarmerProductPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
+
+  const categories = ["All", "Vegetable", "Fruits", "Dairy", "Plant"];
 
   useEffect(() => {
     // farmerId is stored as userEmail
@@ -17,7 +21,7 @@ export default function FarmerProductPage() {
       return;
     }
 
-    fetch(`http://localhost:5000/api/products/farmer/${farmerId}`)
+    fetch("http://localhost:5000/api/products")
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch products");
         return res.json();
@@ -32,6 +36,12 @@ export default function FarmerProductPage() {
         setLoading(false);
       });
   }, []);
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeFilter === "All" || product.category?.toLowerCase() === activeFilter.toLowerCase();
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <>
@@ -55,9 +65,9 @@ export default function FarmerProductPage() {
           overflow-y: auto;
         }
         
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #16a34a; font-weight: bold; padding: 0; }
-        .title { margin: 0; font-size: 22px; color: #111; text-align: center; flex: 1; }
+        .title { margin: 0; font-size: 20px; color: #111; text-align: center; flex: 1; }
         
         .add-btn { 
           background: #16a34a; 
@@ -68,6 +78,48 @@ export default function FarmerProductPage() {
           font-size: 14px; 
           cursor: pointer; 
           font-weight: bold;
+        }
+
+        .search-container {
+          background: white;
+          border-radius: 12px;
+          padding: 10px 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .search-input {
+          border: none;
+          outline: none;
+          flex: 1;
+          font-size: 14px;
+          color: #333;
+        }
+
+        .filter-container {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          margin-bottom: 20px;
+          padding-bottom: 5px;
+        }
+        .filter-chip {
+          padding: 8px 16px;
+          border-radius: 20px;
+          background: white;
+          border: 1px solid #e5e7eb;
+          font-size: 13px;
+          color: #6b7280;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s;
+        }
+        .filter-chip.active {
+          background: #16a34a;
+          color: white;
+          border-color: #16a34a;
         }
         
         .product-list { display: flex; flex-direction: column; gap: 16px; }
@@ -99,7 +151,6 @@ export default function FarmerProductPage() {
         .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
         .empty-icon { font-size: 48px; margin-bottom: 16px; }
         
-        /* Bottom nav */
         .bottom-nav {
           display: flex;
           justify-content: space-around;
@@ -125,22 +176,44 @@ export default function FarmerProductPage() {
         <div className="content-scroll">
           <div className="header">
             <button className="back-btn" onClick={() => navigate("/farmer-dashboard")}>←</button>
-            <h2 className="title">My Products</h2>
+            <h2 className="title">Marketplace</h2>
             <button className="add-btn" onClick={() => navigate("/add-product")}>+ Add</button>
           </div>
 
-        {error && <div style={{color: "red", textAlign: "center"}}>{error}</div>}
-        {loading && <div style={{textAlign: "center", color: "#666"}}>Loading your products...</div>}
+          <div className="search-container">
+            <span>🔍</span>
+            <input 
+              className="search-input" 
+              placeholder="Search products..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-        {!loading && !error && products.length === 0 ? (
+          <div className="filter-container">
+            {categories.map(cat => (
+              <div 
+                key={cat} 
+                className={`filter-chip ${activeFilter === cat ? "active" : ""}`}
+                onClick={() => setActiveFilter(cat)}
+              >
+                {cat}
+              </div>
+            ))}
+          </div>
+
+        {error && <div style={{color: "red", textAlign: "center", marginBottom: "20px"}}>{error}</div>}
+        {loading && <div style={{textAlign: "center", color: "#666", padding: "20px"}}>Loading products...</div>}
+
+        {!loading && !error && filteredProducts.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🌱</div>
-            <h3>No Products Yet</h3>
-            <p>You haven't added any products to your farm yet. Click the + Add button to get started.</p>
+            <div className="empty-icon">📂</div>
+            <h3>No Products Found</h3>
+            <p>We couldn't find any products matching your search or filter.</p>
           </div>
         ) : (
           <div className="product-list">
-            {products.map(product => (
+            {filteredProducts.map(product => (
               <div key={product.id} className="product-card">
                 <img 
                   className="product-img" 
@@ -151,7 +224,7 @@ export default function FarmerProductPage() {
                 <div className="product-info">
                   <div>
                     <h4 className="product-name">{product.name}</h4>
-                    <p className="product-cat">{product.category}</p>
+                    <p className="product-cat">{product.category} • By {product.farmer_name || "Unknown Farmer"}</p>
                   </div>
                   <div className="product-details">
                     <p className="product-price">Rs {product.price}</p>
@@ -175,8 +248,8 @@ export default function FarmerProductPage() {
           <span onClick={() => navigate("/experts")}>
             <div className="icon">👥</div>Experts
           </span>
-          <span>
-            <div className="icon">📅</div>Calendar
+          <span onClick={() => navigate("/my-farm")}>
+            <div className="icon">🚜</div>Farm
           </span>
           <span onClick={() => navigate("/profile")}>
             <div className="icon">👤</div>Profile

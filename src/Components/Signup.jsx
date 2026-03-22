@@ -54,10 +54,14 @@ const SignUpPage = () => {
         return;
       }
 
-      // Navigate by role after success
-      if (role === "Farmer") navigate("/farmer-dashboard");
-      else if (role === "Expert") navigate("/expert-dashboard");
-      else navigate("/buyer-dashboard");
+      // Role-based redirection logic
+      if (role === "Farmer" || role === "Expert") {
+        alert("Your account has been created successfully! ✅\n\nNote: Farmers and Experts require admin approval before they can log in. Please wait for an administrator to approve your account.");
+        navigate("/login");
+      } else {
+        alert("Registration successful! ✅ Please log in to continue.");
+        navigate("/login");
+      }
 
     } catch (error) {
       alert("Server error ❌");

@@ -7,45 +7,80 @@ export default function FarmerDashboard() {
   const [farmerId, setFarmerId] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [productCount, setProductCount] = useState(0);
   const [weather, setWeather] = useState({ temp: "--", condition: "Loading..." });
   const [collabs, setCollabs] = useState([]);
+  const [demands, setDemands] = useState([]);
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
     if (!email) return;
 
-    // Fetch user profile to get City
-    fetch(`http://localhost:5000/api/user/${email}`)
-      .then(res => res.json())
-      .then(user => {
-        setUserName(user.full_name);
-        setFarmerId(user.id);
-        if (user.city) {
-          fetch(`http://localhost:5000/api/weather/${user.city}`)
-            .then(res => res.json())
-            .then(data => setWeather(data))
-            .catch(err => console.error("Weather fetch error:", err));
-        }
+    const fetchAllData = () => {
+      // Fetch user profile to get City
+      fetch(`http://localhost:5000/api/user/${email}`)
+        .then(res => res.json())
+        .then(user => {
+          setUserName(user.full_name);
+          setFarmerId(user.id);
+          if (user.city) {
+            fetch(`http://localhost:5000/api/weather/${user.city}`)
+              .then(res => res.json())
+              .then(data => setWeather(data))
+              .catch(err => console.error("Weather fetch error:", err));
+          }
+        });
 
-        // Fetch Orders for this Farmer
-        fetch(`http://localhost:5000/api/orders/farmer/${user.id}`)
-          .then(res => res.json())
-          .then(data => {
-            setOrders(data);
-            setLoadingOrders(false);
-          })
-          .catch(err => {
-            console.error("Farmer orders fetch error:", err);
-            setLoadingOrders(false);
-          });
+      // Fetch Orders
+      fetch(`http://localhost:5000/api/orders/farmer/${email}`)
+        .then(res => res.json())
+        .then(data => {
+          setOrders(data);
+          setLoadingOrders(false);
+        })
+        .catch(err => {
+          console.error("Farmer orders fetch error:", err);
+          setLoadingOrders(false);
+        });
 
-        // Fetch Collaborations
-        fetch("http://localhost:5000/api/collaborations")
-          .then(res => res.json())
-          .then(data => setCollabs(data))
-          .catch(err => console.error("Collabs fetch error:", err));
-      });
+      // Fetch Product Count
+      fetch(`http://localhost:5000/api/products/farmer/${email}`)
+        .then(res => res.json())
+        .then(data => setProductCount(data.length))
+        .catch(err => console.error("Product count fetch error:", err));
+
+      // Fetch Collaborations
+      fetch("http://localhost:5000/api/collaborations")
+        .then(res => res.json())
+        .then(data => setCollabs(data))
+        .catch(err => console.error("Collabs fetch error:", err));
+
+      // Fetch Buyer Demands
+      fetch("http://localhost:5000/api/demands")
+        .then(res => res.json())
+        .then(data => setDemands(data))
+        .catch(err => console.error("Demands fetch error:", err));
+    };
+
+    fetchAllData();
+    
+    // Store fetch function in a ref or just use it here
+    window.refreshDashboard = fetchAllData; 
   }, []);
+
+  const updateOrderStatus = (orderId, newStatus) => {
+    fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      if (window.refreshDashboard) window.refreshDashboard();
+    })
+    .catch(err => console.error("Update status error:", err));
+  };
 
   return (
     <>
@@ -314,17 +349,22 @@ export default function FarmerDashboard() {
         <div className="stats">
           <div className="stat-card">
             <div>Earnings</div>
-            <h4>$4,250</h4>
-            <div className="green">+12%</div>
+            <h4>Rs {
+              orders
+                .filter(o => o.status === "Delivered")
+                .reduce((sum, o) => sum + (o.price_at_purchase * o.quantity), 0)
+                .toLocaleString()
+            }</h4>
+            <div className="green">Delivered Total</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate("/farmer-orders")} style={{cursor: "pointer"}}>
             <div>Orders</div>
             <h4>{orders.length}</h4>
-            <div className="yellow">Pending</div>
+            <div>Active</div>
           </div>
           <div className="stat-card">
             <div>Products</div>
-            <h4>24</h4>
+            <h4>{productCount}</h4>
             <div>Listed</div>
           </div>
         </div>
@@ -335,16 +375,26 @@ export default function FarmerDashboard() {
             <div>＋</div>Add Product
           </div>
           <div className="action" onClick={() => navigate("/farmer-orders")} style={{cursor: "pointer"}}><div>🧾</div>View Orders</div>
-          <div className="action"><div>🚜</div>My Farm</div>
+          <div className="action" onClick={() => navigate("/my-farm")} style={{cursor: "pointer"}}><div>🚜</div>My Farm</div>
           <div className="action"><div>👤</div>Add Expert</div>
         </div>
 
         {/* Info */}
         <div className="info">
           <div className="info-card">
-            <div>Wheat Price</div>
-            <strong>$340/ton</strong>
-            <div className="badge">High Demand</div>
+            {demands.length > 0 ? (
+              <>
+                <div>High Demand: {demands[0].product_name}</div>
+                <strong>{demands[0].quantity} Needed</strong>
+                <div className="badge">{demands[0].description || "Urgent Request"}</div>
+              </>
+            ) : (
+              <>
+                <div>Wheat Price</div>
+                <strong>$340/ton</strong>
+                <div className="badge">High Demand</div>
+              </>
+            )}
           </div>
           <div className="info-card blue" onClick={() => navigate("/weather-detail")} style={{cursor: "pointer"}}>
             <div>{weather.city || "Weather"}</div>
@@ -354,7 +404,21 @@ export default function FarmerDashboard() {
         </div>
 
         {/* Recent Orders */}
-        <div className="section-title">Recent Orders</div>
+        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+          <div className="section-title">Recent Orders</div>
+          <button 
+            onClick={() => navigate("/farmer-orders")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#16a34a",
+              fontSize: "13px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              padding: "0"
+            }}
+          >View All</button>
+        </div>
 
         {loadingOrders ? (
           <p style={{fontSize: "14px", color: "#666"}}>Loading orders...</p>
@@ -374,8 +438,14 @@ export default function FarmerDashboard() {
                 <strong>Rs{order.price_at_purchase * order.quantity}</strong>
               </div>
               <div className="order-actions">
-                <button className="reject">Reject</button>
-                <button className="accept">Accept</button>
+                {order.status === "Order Placed" ? (
+                  <>
+                    <button className="reject" onClick={() => updateOrderStatus(order.order_id, "Cancelled")}>Reject</button>
+                    <button className="accept" onClick={() => updateOrderStatus(order.order_id, "Accepted")}>Accept</button>
+                  </>
+                ) : (
+                  <span style={{fontSize: "12px", fontWeight: "bold", color: "#2e8b57"}}>{order.status}</span>
+                )}
               </div>
             </div>
           ))
@@ -413,8 +483,8 @@ export default function FarmerDashboard() {
           <span onClick={() => navigate("/experts")}>
             <div className="icon">👥</div>Experts
           </span>
-          <span>
-            <div className="icon">📅</div>Calendar
+          <span onClick={() => navigate("/my-farm")}>
+            <div className="icon">🚜</div>Farm
           </span>
           <span onClick={() => navigate("/profile")}>
             <div className="icon">👤</div>Profile

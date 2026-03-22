@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Check if actually admin
     const role = localStorage.getItem("userRole");
-    if (role !== "Admin") {
+    if (role?.toLowerCase() !== "admin") {
       navigate("/login");
       return;
     }
@@ -232,6 +232,13 @@ export default function AdminDashboard() {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          transition: all 0.2s ease;
+        }
+
+        .stat-card.clickable:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+          background: #f1f5f9;
         }
 
         .stat-info h3 {
@@ -350,7 +357,7 @@ export default function AdminDashboard() {
           <>
             {/* Stats Grid */}
             <div className="stats-grid">
-              <div className="stat-card">
+              <div className="stat-card clickable" onClick={() => setActiveTab("users")} style={{ cursor: 'pointer' }}>
                 <div className="stat-info">
                   <h3>{stats.totalUsers}</h3>
                   <p>Total Users</p>

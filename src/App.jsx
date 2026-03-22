@@ -20,6 +20,7 @@ import FarmerProductPage from "./Components/FarmerProductPage";
 import FarmerExpertPage from "./Components/FarmerExpertPage";
 import FarmerOrdersPage from "./Components/FarmerOrdersPage";
 import AdminDashboard from "./Components/AdminDashboard";
+import MyProducts from "./Components/MyProducts";
 
 
 
@@ -49,6 +50,7 @@ function App() {
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/my-farm" element={<MyProducts />} />
         <Route path="/buyer-cart" element={<CartPage />} />
 
         <Route path="/buyer-orders" element={<OrdersPage />} />
