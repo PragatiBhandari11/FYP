@@ -483,8 +483,8 @@ export default function FarmerDashboard() {
           <span onClick={() => navigate("/experts")}>
             <div className="icon">👥</div>Experts
           </span>
-          <span onClick={() => navigate("/my-farm")}>
-            <div className="icon">🚜</div>Farm
+          <span onClick={() => navigate("/farmer-calendar")}>
+            <div className="icon">📅</div>Calendar
           </span>
           <span onClick={() => navigate("/profile")}>
             <div className="icon">👤</div>Profile

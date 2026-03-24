@@ -128,17 +128,17 @@ db.connect((err) => {
       console.error(" Failed to create products table:", err.message);
     } else {
       console.log(" products table ready");
-        // Robust Migration: Check if column exists, then add if missing
-        const checkFarmerIdSql = "SHOW COLUMNS FROM products LIKE 'farmer_id'";
-        db.query(checkFarmerIdSql, (checkErr, results) => {
-          if (checkErr) return console.error(" Column check error:", checkErr.message);
-          if (results.length === 0) {
-            db.query("ALTER TABLE products ADD COLUMN farmer_id VARCHAR(100)", (alterErr) => {
-              if (alterErr) console.error(" Migration error (products):", alterErr.message);
-              else console.log(" Added farmer_id column to products table");
-            });
-          }
-        });
+      // Robust Migration: Check if column exists, then add if missing
+      const checkFarmerIdSql = "SHOW COLUMNS FROM products LIKE 'farmer_id'";
+      db.query(checkFarmerIdSql, (checkErr, results) => {
+        if (checkErr) return console.error(" Column check error:", checkErr.message);
+        if (results.length === 0) {
+          db.query("ALTER TABLE products ADD COLUMN farmer_id VARCHAR(100)", (alterErr) => {
+            if (alterErr) console.error(" Migration error (products):", alterErr.message);
+            else console.log(" Added farmer_id column to products table");
+          });
+        }
+      });
     }
   });
 
@@ -159,8 +159,8 @@ db.connect((err) => {
       console.log("orders table ready");
       // Create sub-items table ONLY after parent orders table successfully exists
       db.query(orderItemsTable, (err2) => {
-         if (err2) console.error(" Failed to create order_items table:", err2.message);
-         else console.log(" order_items table ready");
+        if (err2) console.error(" Failed to create order_items table:", err2.message);
+        else console.log(" order_items table ready");
       });
     }
   });
@@ -200,6 +200,45 @@ db.connect((err) => {
     }
   });
 
+  // DISEASE REPORTS TABLE
+  const diseaseReportsTable = `
+    CREATE TABLE IF NOT EXISTS disease_reports (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      farmer_email VARCHAR(100) NOT NULL,
+      image_url VARCHAR(255) NOT NULL,
+      description TEXT,
+      status ENUM('Pending', 'Responded') DEFAULT 'Pending',
+      expert_response TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  // CROP CALENDAR TABLE (Global seasonal info)
+  const cropCalendarTable = `
+    CREATE TABLE IF NOT EXISTS crop_calendar (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      crop_name VARCHAR(255) NOT NULL,
+      crop_type ENUM('Fruit', 'Vegetable') NOT NULL,
+      season_type ENUM('Seasonal', 'Off-seasonal') NOT NULL,
+      best_months VARCHAR(255),
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  // FARMER ACTIVITIES TABLE (Individual farm tracking)
+  const farmerActivitiesTable = `
+    CREATE TABLE IF NOT EXISTS farmer_activities (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      farmer_email VARCHAR(100) NOT NULL,
+      task_name VARCHAR(255) NOT NULL,
+      task_date DATE NOT NULL,
+      status ENUM('Pending', 'Completed') DEFAULT 'Pending',
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
   // Create demands table
   db.query(demandsTable, (err) => {
     if (err) {
@@ -208,7 +247,34 @@ db.connect((err) => {
       console.log(" demands table ready");
     }
   });
-  
+
+  // Create disease_reports table
+  db.query(diseaseReportsTable, (err) => {
+    if (err) {
+      console.error(" Failed to create disease_reports table:", err.message);
+    } else {
+      console.log(" disease_reports table ready");
+    }
+  });
+
+  // Create crop_calendar table
+  db.query(cropCalendarTable, (err) => {
+    if (err) {
+      console.error(" Failed to create crop_calendar table:", err.message);
+    } else {
+      console.log(" crop_calendar table ready");
+    }
+  });
+
+  // Create farmer_activities table
+  db.query(farmerActivitiesTable, (err) => {
+    if (err) {
+      console.error(" Failed to create farmer_activities table:", err.message);
+    } else {
+      console.log(" farmer_activities table ready");
+    }
+  });
+
   // SEED ADMIN USER IF NOT EXISTS
   const adminEmail = "admin@gmail.com";
   db.query("SELECT * FROM users WHERE email = ?", [adminEmail], async (err, results) => {

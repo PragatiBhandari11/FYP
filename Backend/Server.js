@@ -10,6 +10,9 @@ const cartRoutes = require("./routes/cart");
 const ordersRoutes = require("./routes/orders");
 const collabRoutes = require("./routes/collaborations");
 const demandsRoutes = require("./routes/demands");
+const adminRoutes = require("./routes/admin");
+const diseaseRoutes = require("./routes/disease");
+const calendarRoutes = require("./routes/calendar");
 
 
 const app = express();
@@ -30,6 +33,9 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/collaborations', collabRoutes);
 app.use('/api/demands', demandsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/disease', diseaseRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 
 

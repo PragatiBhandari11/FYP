@@ -97,4 +97,49 @@ router.get("/products/farmer/:farmerId", (req, res) => {
   });
 });
 
+// GET SINGLE PRODUCT BY ID
+router.get("/products/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "SELECT * FROM products WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.status(500).json({ message: err.message });
+    if (result.length === 0) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(result[0]);
+  });
+});
+
+// UPDATE PRODUCT
+router.put("/products/:id", upload.single("image"), (req, res) => {
+  const { id } = req.params;
+  const { name, category, price, quantity } = req.body;
+  const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image_url;
+
+  const sql = `
+    UPDATE products 
+    SET name = ?, category = ?, price = ?, quantity = ?, image_url = ? 
+    WHERE id = ?
+  `;
+
+  db.query(sql, [name, category, price, quantity, imageUrl, id], (err, result) => {
+    if (err) {
+      console.error("Update product error:", err.message);
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.status(200).json({ message: "Product updated successfully ✅" });
+  });
+});
+
+// DELETE PRODUCT
+router.delete("/products/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "DELETE FROM products WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Delete product error:", err.message);
+      return res.status(500).json({ message: err.message });
+    }
+    res.status(200).json({ message: "Product removed successfully ✅" });
+  });
+});
+
 module.exports = router;

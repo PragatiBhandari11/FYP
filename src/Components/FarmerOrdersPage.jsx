@@ -173,6 +173,28 @@ export default function FarmerOrdersPage() {
           font-size: 60px;
           margin-bottom: 20px;
         }
+        /* Bottom nav */
+        .bottom-nav {
+          display: flex;
+          justify-content: space-around;
+          padding: 12px 0;
+          border-top: 1px solid #e5e7eb;
+          background: #fff;
+          margin-top: auto;
+        }
+        .bottom-nav span {
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          gap: 4px; 
+          font-size: 13px; 
+          color: #6b7280; 
+          cursor: pointer; 
+        }
+        .bottom-nav span .icon { font-size: 20px; line-height: 1; }
+        .bottom-nav .active {
+          color: #16a34a;
+        }
       `}</style>
 
       <div className="app">
@@ -235,6 +257,24 @@ export default function FarmerOrdersPage() {
               </div>
             ))
           )}
+        </div>
+
+        <div className="bottom-nav">
+          <span onClick={() => navigate("/farmer-dashboard")}>
+            <div className="icon">🏠</div>Home
+          </span>
+          <span onClick={() => navigate("/products")}>
+            <div className="icon">🌱</div>Products
+          </span>
+          <span onClick={() => navigate("/experts")}>
+            <div className="icon">👥</div>Experts
+          </span>
+          <span onClick={() => navigate("/farmer-calendar")}>
+            <div className="icon">📅</div>Calendar
+          </span>
+          <span onClick={() => navigate("/profile")}>
+            <div className="icon">👤</div>Profile
+          </span>
         </div>
       </div>
     </>

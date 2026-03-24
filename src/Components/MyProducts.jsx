@@ -8,6 +8,7 @@ export default function MyProducts() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+  const [menuOpen, setMenuOpen] = useState(null); // Track which product's menu is open
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -15,13 +16,9 @@ export default function MyProducts() {
     return matchesSearch && matchesCategory;
   });
 
-  useEffect(() => {
+  const fetchProducts = () => {
     const email = localStorage.getItem("userEmail");
-    if (!email) {
-      setError("Please log in to view your products.");
-      setLoading(false);
-      return;
-    }
+    if (!email) return;
 
     fetch(`http://localhost:5000/api/products/farmer/${email}`)
       .then(res => {
@@ -37,7 +34,36 @@ export default function MyProducts() {
         setError("Could not load products.");
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    if (!email) {
+      setError("Please log in to view your products.");
+      setLoading(false);
+      return;
+    }
+    fetchProducts();
   }, []);
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this product? This cannot be undone.")) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/products/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (res.ok) {
+          alert("Product removed! ✅");
+          fetchProducts();
+          setMenuOpen(null);
+        } else {
+          alert(`Failed to delete product: ${data.message || "Unknown error"}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Cannot connect to server for deletion.");
+      }
+    }
+  };
 
   return (
     <>
@@ -62,14 +88,18 @@ export default function MyProducts() {
         .filter { padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; border: 1px solid #c8e6c9; color: #2e7d32; background: white; }
         .filter.active { background: #2e7d32; color: white; }
         .product-list { flex: 1; padding: 10px 0; }
-        .product { background: white; margin: 10px 16px; padding: 10px; border-radius: 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .product { background: white; margin: 10px 16px; padding: 10px; border-radius: 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: relative; }
         .product img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; }
         .product-info { flex: 1; }
         .product-info h4 { margin: 0; font-size: 14px; }
         .price { font-size: 13px; color: #2e7d32; font-weight: bold; margin: 4px 0; }
         .stock { font-size: 12px; color: gray; }
         .low { color: #ff9800; }
-        .menu { font-size: 18px; color: gray; cursor: pointer; }
+        .menu-btn { font-size: 18px; color: gray; cursor: pointer; padding: 5px; }
+        .dropdown { position: absolute; right: 10px; top: 40px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 20; overflow: hidden; }
+        .dropdown button { display: block; width: 100%; padding: 10px 16px; border: none; background: none; text-align: left; font-size: 13px; cursor: pointer; }
+        .dropdown button:hover { background: #f0f0f0; }
+        .dropdown button.delete { color: #d32f2f; }
         .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
         .add-btn { position: fixed; bottom: 80px; left: 50%; transform: translateX(120px); width: 52px; height: 52px; border-radius: 50%; background: #2e7d32; color: white; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 390px; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #ddd; }
@@ -129,7 +159,14 @@ export default function MyProducts() {
                     📦 {product.quantity} kg in stock
                   </div>
                 </div>
-                <div className="menu">⋮</div>
+                <div className="menu-btn" onClick={() => setMenuOpen(menuOpen === product.id ? null : product.id)}>⋮</div>
+                
+                {menuOpen === product.id && (
+                  <div className="dropdown">
+                    <button onClick={() => navigate(`/edit-product/${product.id}`)}>✏️ Edit</button>
+                    <button className="delete" onClick={() => handleDelete(product.id)}>🗑️ Delete</button>
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -138,21 +175,21 @@ export default function MyProducts() {
         <div className="add-btn" onClick={() => navigate("/add-product")}>+</div>
 
         <div className="bottom-nav">
-          <div className="nav-item" onClick={() => navigate("/farmer-dashboard")}>
+          <span onClick={() => navigate("/farmer-dashboard")}>
             <div className="icon">🏠</div>Home
-          </div>
-          <div className="nav-item" onClick={() => navigate("/products")}>
-            <div className="icon">🌱</div>Market
-          </div>
-          <div className="nav-item active">
-            <div className="icon">🚜</div>Farm
-          </div>
-          <div className="nav-item" onClick={() => navigate("/experts")}>
+          </span>
+          <span onClick={() => navigate("/products")}>
+            <div className="icon">🌱</div>Products
+          </span>
+          <span onClick={() => navigate("/experts")}>
             <div className="icon">👥</div>Experts
-          </div>
-          <div className="nav-item" onClick={() => navigate("/profile")}>
+          </span>
+          <span onClick={() => navigate("/farmer-calendar")}>
+            <div className="icon">📅</div>Calendar
+          </span>
+          <span onClick={() => navigate("/profile")}>
             <div className="icon">👤</div>Profile
-          </div>
+          </span>
         </div>
       </div>
     </>

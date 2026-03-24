@@ -242,14 +242,14 @@ export default function FarmerProductPage() {
           <span onClick={() => navigate("/farmer-dashboard")}>
             <div className="icon">🏠</div>Home
           </span>
-          <span className="active">
+          <span className="active" onClick={() => navigate("/products")}>
             <div className="icon">🌱</div>Products
           </span>
           <span onClick={() => navigate("/experts")}>
             <div className="icon">👥</div>Experts
           </span>
-          <span onClick={() => navigate("/my-farm")}>
-            <div className="icon">🚜</div>Farm
+          <span onClick={() => navigate("/farmer-calendar")}>
+            <div className="icon">📅</div>Calendar
           </span>
           <span onClick={() => navigate("/profile")}>
             <div className="icon">👤</div>Profile

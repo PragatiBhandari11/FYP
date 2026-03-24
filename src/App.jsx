@@ -21,6 +21,8 @@ import FarmerExpertPage from "./Components/FarmerExpertPage";
 import FarmerOrdersPage from "./Components/FarmerOrdersPage";
 import AdminDashboard from "./Components/AdminDashboard";
 import MyProducts from "./Components/MyProducts";
+import ExpertDiseaseReports from "./Components/ExpertDiseaseReports";
+import FarmerCalendarPage from "./Components/FarmerCalendarPage";
 
 
 
@@ -42,13 +44,16 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
         <Route path="/add-product" element={<AddProduct />} />
+        <Route path="/edit-product/:id" element={<AddProduct />} />
         <Route path="/collaboration/:id" element={<CollaborationDetail />} />
         <Route path="/weather-detail" element={<WeatherDetail />} />
         <Route path="/products" element={<FarmerProductPage />} />
         <Route path="/experts" element={<FarmerExpertPage />} />
+        <Route path="/farmer-calendar" element={<FarmerCalendarPage />} />
         <Route path="/farmer-orders" element={<FarmerOrdersPage />} />
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
+        <Route path="/expert-disease-reports" element={<ExpertDiseaseReports />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/my-farm" element={<MyProducts />} />
         <Route path="/buyer-cart" element={<CartPage />} />

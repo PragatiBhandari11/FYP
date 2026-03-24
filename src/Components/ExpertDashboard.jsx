@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Ensure you have installed react-router-dom
+import { Link, useNavigate } from "react-router-dom"; // Ensure you have installed react-router-dom
 
 const data = {
   user: {
@@ -13,8 +13,8 @@ const data = {
     { label: "Resolved", value: 142 },
   ],
   tools: [
+    { label: "Disease Reports", icon: "🌡️", path: "/expert-disease-reports" },
     { label: "Write Article", icon: "📝" },
-    { label: "Upload Guide", icon: "☁️⬆️" },
   ],
   questions: [
     {
@@ -51,6 +51,7 @@ const data = {
 };
 
 const ExpertDashboard = () => {
+  const navigate = useNavigate();
   const [user, setUser] = React.useState({ name: "Expert", role: "Specialist", avatar: data.user.avatar });
 
   React.useEffect(() => {
@@ -99,7 +100,11 @@ const ExpertDashboard = () => {
       <div style={styles.sectionTitle}>Expert Tools</div>
       <div style={styles.toolsContainer}>
         {data.tools.map((tool) => (
-          <div key={tool.label} style={styles.toolCard}>
+          <div 
+            key={tool.label} 
+            style={styles.toolCard} 
+            onClick={() => tool.path && navigate(tool.path)}
+          >
             <div style={styles.toolIcon}>{tool.icon}</div>
             <div>{tool.label}</div>
           </div>

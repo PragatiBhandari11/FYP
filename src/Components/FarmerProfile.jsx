@@ -68,36 +68,29 @@ export default function FarmerProfile() {
         .logout-btn:hover { background: #c82333; }
         .error { text-align: center; color: #dc3545; padding: 20px; }
 
-        /* Farmer Bottom Navigation */
+        /* Bottom nav */
         .bottom-nav {
           display: flex;
           justify-content: space-around;
-          padding: 10px 0;
+          padding: 12px 0;
           border-top: 1px solid #e5e7eb;
           background: #fff;
-          margin-top: 16px;
+          margin-top: auto;
           margin-left: -20px;
           margin-right: -20px;
         }
-
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          font-size: 12px;
-          color: #6b7280;
-          text-align: center;
-          cursor: pointer;
+        .bottom-nav span {
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          gap: 4px; 
+          font-size: 13px; 
+          color: #6b7280; 
+          cursor: pointer; 
         }
-
-        .nav-item .icon {
-          font-size: 20px;
-          margin-bottom: 4px;
-        }
-
-        .nav-item.active {
+        .bottom-nav span .icon { font-size: 20px; line-height: 1; }
+        .bottom-nav .active {
           color: #16a34a;
-          font-weight: bold;
         }
       `}</style>
 
@@ -155,28 +148,22 @@ export default function FarmerProfile() {
           </div>
         )}
 
-        {/* Bottom Navigation */}
         <div className="bottom-nav">
-          <div className="nav-item" onClick={() => navigate("/farmer-dashboard")}>
-            <span className="icon">🏠</span>
-            <span>Home</span>
-          </div>
-          <div className="nav-item">
-            <span className="icon">🌱</span>
-            <span>Products</span>
-          </div>
-          <div className="nav-item">
-            <span className="icon">👥</span>
-            <span>Experts</span>
-          </div>
-          <div className="nav-item">
-            <span className="icon">📅</span>
-            <span>Calendar</span>
-          </div>
-          <div className="nav-item active" onClick={() => navigate("/farmer-profile")}>
-            <span className="icon">👤</span>
-            <span>Profile</span>
-          </div>
+          <span onClick={() => navigate("/farmer-dashboard")}>
+            <div className="icon">🏠</div>Home
+          </span>
+          <span onClick={() => navigate("/products")}>
+            <div className="icon">🌱</div>Products
+          </span>
+          <span onClick={() => navigate("/experts")}>
+            <div className="icon">👥</div>Experts
+          </span>
+          <span onClick={() => navigate("/farmer-calendar")}>
+            <div className="icon">📅</div>Calendar
+          </span>
+          <span className="active" onClick={() => navigate("/profile")}>
+            <div className="icon">👤</div>Profile
+          </span>
         </div>
       </div>
     </>
