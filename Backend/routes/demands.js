@@ -17,6 +17,18 @@ router.post("/", (req, res) => {
       console.error("❌ Demand post error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
+    // Notify all farmers about the new demand
+    db.query("SELECT email FROM users WHERE role = 'Farmer'", (farmerErr, farmers) => {
+      if (!farmerErr) {
+        const notifSql = "INSERT INTO notifications (user_email, title, message, type) VALUES (?, ?, ?, ?)";
+        farmers.forEach(far => {
+          db.query(notifSql, [far.email, "New Product Demand", `A buyer is looking for: ${productName} (${quantity})`, 'Demand'], (nErr) => {
+             if (nErr) console.error("Farmer demand notif error:", nErr.message);
+          });
+        });
+      }
+    });
+
     res.status(201).json({ message: "Demand alert sent successfully! 📢", demandId: result.insertId });
   });
 });

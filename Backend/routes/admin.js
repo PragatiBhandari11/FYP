@@ -102,13 +102,29 @@ router.put("/orders/:id/status", (req, res) => {
   const { status } = req.body;
   if (!status) return res.status(400).json({ message: "Status required" });
 
-  const sql = "UPDATE orders SET status = ? WHERE id = ?";
-  db.query(sql, [status, req.params.id], (err) => {
-    if (err) {
-      console.error("❌ Admin Update status error:", err.message);
-      return res.status(500).json({ message: "Database error" });
-    }
-    res.status(200).json({ message: "Order status updated ✅" });
+  // First fetch order to get buyer_email
+  db.query("SELECT buyer_email, order_number FROM orders WHERE id = ?", [req.params.id], (err, orderResult) => {
+    if (err || orderResult.length === 0) return res.status(500).json({ message: "Order not found" });
+    
+    const { buyer_email, order_number } = orderResult[0];
+
+    const sql = "UPDATE orders SET status = ? WHERE id = ?";
+    db.query(sql, [status, req.params.id], (updErr) => {
+      if (updErr) {
+        console.error("❌ Admin Update status error:", updErr.message);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      // Create notification for buyer
+      const notifSql = "INSERT INTO notifications (user_email, title, message, type) VALUES (?, ?, ?, ?)";
+      const title = `Order Update: #${order_number.slice(-8)}`;
+      const message = `Your order status has been updated to: ${status}`;
+      db.query(notifSql, [buyer_email, title, message, 'Order'], (notifErr) => {
+        if (notifErr) console.error("Failed to create order notification:", notifErr.message);
+      });
+
+      res.status(200).json({ message: "Order status updated ✅" });
+    });
   });
 });
 

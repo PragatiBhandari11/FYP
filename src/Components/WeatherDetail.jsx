@@ -7,17 +7,27 @@ export default function WeatherDetail() {
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
+    const cachedCity = localStorage.getItem("userCity");
     if (!email) return;
 
-    // Fetch user profile to get City
+    // Fetch Weather immediately if possible
+    if (cachedCity) {
+      fetch(`http://localhost:5000/api/weather/${cachedCity}`)
+        .then(res => res.json())
+        .then(data => setWeather(data))
+        .catch(err => console.error("Cached weather fetch error:", err));
+    }
+
+    // Fetch user profile to ensure we have latest info (and city if cache was empty)
     fetch(`http://localhost:5000/api/user/${email}`)
       .then(res => res.json())
       .then(user => {
-        if (user.city) {
+        // If city changed or wasn't cached, fetch again
+        if (user.city && user.city !== cachedCity) {
           fetch(`http://localhost:5000/api/weather/${user.city}`)
             .then(res => res.json())
             .then(data => setWeather(data))
-            .catch(err => console.error("Weather fetch error:", err));
+            .catch(err => console.error("Weather fetch update error:", err));
         }
       });
   }, []);

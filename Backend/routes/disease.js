@@ -35,6 +35,19 @@ router.post("/report", upload.single("image"), (req, res) => {
   const sql = "INSERT INTO disease_reports (farmer_email, image_url, description) VALUES (?, ?, ?)";
   db.query(sql, [farmerEmail, imageUrl, description], (err, result) => {
     if (err) return res.status(500).json({ message: err.message });
+    
+    // Notify all experts (since anyone can respond)
+    db.query("SELECT email FROM users WHERE role = 'Expert'", (expertErr, experts) => {
+      if (!expertErr) {
+        const notifSql = "INSERT INTO notifications (user_email, title, message, type) VALUES (?, ?, ?, ?)";
+        experts.forEach(exp => {
+          db.query(notifSql, [exp.email, "New Disease Report", `A farmer has submitted a new report: ${description?.slice(0, 30)}...`, 'Query'], (nErr) => {
+             if (nErr) console.error("Expert notif error:", nErr.message);
+          });
+        });
+      }
+    });
+
     res.status(201).json({ message: "Disease report submitted successfully!", reportId: result.insertId });
   });
 });
@@ -68,10 +81,23 @@ router.put("/respond/:id", (req, res) => {
   const { id } = req.params;
   const { response } = req.body;
 
-  const sql = "UPDATE disease_reports SET expert_response = ?, status = 'Responded' WHERE id = ?";
-  db.query(sql, [response, id], (err, result) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.status(200).json({ message: "Response submitted!" });
+  // Fetch farmer email first
+  db.query("SELECT farmer_email FROM disease_reports WHERE id = ?", [id], (err, report) => {
+    if (err || report.length === 0) return res.status(500).json({ message: "Report not found" });
+    const farmerEmail = report[0].farmer_email;
+
+    const sql = "UPDATE disease_reports SET expert_response = ?, status = 'Responded' WHERE id = ?";
+    db.query(sql, [response, id], (updErr, result) => {
+      if (updErr) return res.status(500).json({ message: updErr.message });
+
+      // Notify farmer
+      const notifSql = "INSERT INTO notifications (user_email, title, message, type) VALUES (?, ?, ?, ?)";
+      db.query(notifSql, [farmerEmail, "Expert Responded", "An expert has responded to your disease report.", 'Response'], (nErr) => {
+        if (nErr) console.error("Farmer response notif error:", nErr.message);
+      });
+
+      res.status(200).json({ message: "Response submitted!" });
+    });
   });
 });
 

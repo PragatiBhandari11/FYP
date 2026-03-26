@@ -1,101 +1,162 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const Welcome = () => {
+export default function Welcome() {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.appContainer}>
-      <div style={styles.card}>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
 
-        {/* App Title */}
-        <h1 style={styles.title}>Farmers Market</h1>
+        :root {
+          --primary: hsl(142, 76%, 36%);
+          --primary-dark: hsl(142, 76%, 20%);
+          --accent: hsl(45, 93%, 47%);
+        }
 
-        {/* Subtitle */}
-        <p style={styles.subtitle}>
-          Bringing the charm of the Nepali market to your fingertips
-        </p>
+        body {
+          margin: 0;
+          font-family: 'Outfit', sans-serif;
+          background: #0f172a;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+        }
 
-        {/* App Button */}
-        <button
-          style={styles.primaryButton}
-          onClick={() => navigate("/login")}
-        >
-          Let’s Get Started
-        </button>
+        .mobile-frame {
+          width: 390px;
+          height: 844px;
+          background: white;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          display: flex;
+          flex-direction: column;
+        }
 
-        {/* Sign-in Link */}
-        <p style={styles.footerText}>
-          Already have an account?
-          <span
-            style={styles.signInLink}
-            onClick={() => navigate("/signup")}
-          >
-            {" "}Sign In
-          </span>
-        </p>
+        .hero-section {
+          height: 60%;
+          position: relative;
+          background: url('/assets/welcome_hero.png') center/cover no-repeat;
+        }
+
+        .hero-overlay {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: linear-gradient(to bottom, transparent 40%, white 100%);
+        }
+
+        .content-section {
+          height: 40%;
+          padding: 30px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          z-index: 10;
+        }
+
+        .logo-badge {
+          background: var(--primary);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 50px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 16px;
+        }
+
+        .title {
+          font-size: 36px;
+          font-weight: 800;
+          color: #1e293b;
+          margin: 0 0 12px 0;
+          line-height: 1.1;
+        }
+
+        .title span {
+          color: var(--primary);
+        }
+
+        .subtitle {
+          font-size: 16px;
+          color: #64748b;
+          line-height: 1.6;
+          margin-bottom: 30px;
+        }
+
+        .btn-primary {
+          width: 100%;
+          padding: 18px;
+          background: var(--primary);
+          color: white;
+          border: none;
+          border-radius: 16px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 10px 15px -3px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-primary:active {
+          transform: scale(0.98);
+        }
+
+        .footer {
+          margin-top: auto;
+          font-size: 14px;
+          color: #94a3b8;
+        }
+
+        .btn-text {
+          color: var(--primary);
+          font-weight: 600;
+          cursor: pointer;
+          margin-left: 5px;
+        }
+
+        /* Decorative Elements */
+        .decoration {
+          position: absolute;
+          width: 200px;
+          height: 200px;
+          background: var(--primary);
+          filter: blur(80px);
+          opacity: 0.1;
+          border-radius: 50%;
+          bottom: -50px;
+          right: -50px;
+        }
+      `}</style>
+
+      <div className="mobile-frame">
+        <div className="hero-section">
+          <div className="hero-overlay" />
+        </div>
+
+        <div className="content-section">
+          <div className="logo-badge">Premium Agri-Tech</div>
+          <h1 className="title">Agro<span>Connect</span></h1>
+          <p className="subtitle">
+            Empowering Nepalese farmers with direct markets and expert guidance.
+          </p>
+
+          <button className="btn-primary" onClick={() => navigate("/login")}>
+            Enter the Market
+          </button>
+
+          <div className="footer">
+            New here? <span className="btn-text" onClick={() => navigate("/signup")}>Join Community</span>
+          </div>
+        </div>
+        
+        <div className="decoration" />
       </div>
-    </div>
+    </>
   );
-};
-
-const styles = {
-  appContainer: {
-    height: "100vh",
-    width: "100vw",
-    backgroundColor: "#F9F5FF",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: 380,
-    padding: 25,
-    textAlign: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-  },
-
-  title: {
-    fontSize: 32,
-    fontWeight: 800,
-    color: "#5a2ca0",
-    marginBottom: 10,
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: "#666",
-    marginBottom: 40,
-    paddingHorizontal: 10,
-  },
-
-  primaryButton: {
-    width: "100%",
-    padding: 15,
-    backgroundColor: "#6a2ed9",
-    color: "white",
-    border: "none",
-    borderRadius: 12,
-    fontSize: 18,
-    fontWeight: 600,
-    cursor: "pointer",
-    marginBottom: 25,
-  },
-
-  footerText: {
-    fontSize: 14,
-    color: "#777",
-  },
-
-  signInLink: {
-    color: "#6a2ed9",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
-};
-
-export default Welcome;
+}

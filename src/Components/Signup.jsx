@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
-
-  // Role state
   const [role, setRole] = useState("Buyer");
-
-  // Form state (⬅️ THIS IS WHERE YOUR CODE GOES)
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -18,15 +14,12 @@ const SignUpPage = () => {
     confirmPassword: "",
   });
 
-  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle signup submit
   const handleSignUp = async (e) => {
     e.preventDefault();
-
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
       return;
@@ -36,207 +29,187 @@ const SignUpPage = () => {
       const res = await fetch("http://localhost:5000/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: form.fullName,
-          email: form.email,
-          phone: form.phone,
-          country: form.country,
-          city: form.city,
-          password: form.password,
-          role,
-        }),
+        body: JSON.stringify({ ...form, role }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         alert(data.message);
         return;
       }
 
-      // Role-based redirection logic
       if (role === "Farmer" || role === "Expert") {
-        alert("Your account has been created successfully! ✅\n\nNote: Farmers and Experts require admin approval before they can log in. Please wait for an administrator to approve your account.");
-        navigate("/login");
+        alert("Account created! ✅\n\nNote: Farmers and Experts require admin approval before login.");
       } else {
-        alert("Registration successful! ✅ Please log in to continue.");
-        navigate("/login");
+        alert("Registration successful! ✅ Please log in.");
       }
-
+      navigate("/login");
     } catch (error) {
       alert("Server error ❌");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <button onClick={() => navigate(-1)} style={styles.backButton}>
-        ← Back
-      </button>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
 
-      <h2 style={styles.greeting}>Create your account</h2>
+        body {
+          margin: 0;
+          font-family: 'Outfit', sans-serif;
+          background: #0f172a;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+        }
 
-      <form onSubmit={handleSignUp} style={styles.form}>
-        <label style={styles.label}>
-          Full Name
-          <input
-            type="text"
-            name="fullName"
-            value={form.fullName}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </label>
+        .mobile-frame {
+          width: 390px;
+          height: 844px;
+          background: white;
+          position: relative;
+          overflow-y: auto;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          display: flex;
+          flex-direction: column;
+          padding: 30px;
+          box-sizing: border-box;
+        }
 
-        <label style={styles.label}>
-          Email
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </label>
+        .mobile-frame::-webkit-scrollbar {
+          width: 0px;
+        }
 
-        <label style={styles.label}>
-          Phone Number
-          <input
-            type="tel"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            style={styles.input}
-          />
-        </label>
+        .back-nav {
+          font-size: 24px;
+          cursor: pointer;
+          margin-bottom: 20px;
+          color: #64748b;
+        }
 
-        <label style={styles.label}>
-          Country
-          <input
-            type="text"
-            name="country"
-            value={form.country}
-            onChange={handleChange}
-            style={styles.input}
-          />
-        </label>
+        .header h1 {
+          font-size: 28px;
+          font-weight: 800;
+          color: #1e293b;
+          margin: 0 0 8px 0;
+        }
 
-        <label style={styles.label}>
-          City
-          <input
-            type="text"
-            name="city"
-            value={form.city}
-            placeholder="e.g. Kathmandu"
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </label>
+        .form-group {
+          margin-bottom: 15px;
+        }
 
-        <label style={styles.label}>
-          Select Role
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            style={{ ...styles.input, backgroundColor: "#fff" }}
-          >
-            <option value="Buyer">Buyer</option>
-            <option value="Farmer">Farmer</option>
-            <option value="Expert">Expert</option>
-          </select>
-        </label>
+        .form-group label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: #475569;
+          margin-bottom: 6px;
+        }
 
-        <label style={styles.label}>
-          Password
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </label>
+        .modern-input, .modern-select {
+          width: 100%;
+          padding: 12px 16px;
+          border: 2px solid #f1f5f9;
+          border-radius: 12px;
+          font-size: 15px;
+          background: #f8fafc;
+          transition: 0.3s;
+          box-sizing: border-box;
+        }
 
-        <label style={styles.label}>
-          Confirm Password
-          <input
-            type="password"
-            name="confirmPassword"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </label>
+        .modern-input:focus, .modern-select:focus {
+          outline: none;
+          border-color: #16a34a;
+          background: white;
+        }
 
-        <button type="submit" style={styles.signUpButton}>
-          Sign Up
-        </button>
-      </form>
-    </div>
+        .btn-signup {
+          width: 100%;
+          padding: 16px;
+          background: #16a34a;
+          color: white;
+          border: none;
+          border-radius: 14px;
+          font-size: 17px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 10px;
+          box-shadow: 0 10px 15px -3px rgba(22, 163, 74, 0.2);
+        }
+
+        .footer-link {
+          text-align: center;
+          margin-top: 25px;
+          font-size: 14px;
+          color: #94a3b8;
+          padding-bottom: 20px;
+        }
+
+        .footer-link span {
+          color: #16a34a;
+          font-weight: 600;
+          cursor: pointer;
+        }
+      `}</style>
+
+      <div className="mobile-frame">
+        <div className="back-nav" onClick={() => navigate(-1)}>←</div>
+        
+        <div className="header">
+          <h1>Create Account</h1>
+        </div>
+
+        <form onSubmit={handleSignUp}>
+          <div className="form-group">
+            <label>Full Name</label>
+            <input className="modern-input" type="text" name="fullName" value={form.fullName} onChange={handleChange} required />
+          </div>
+
+          <div className="form-group">
+            <label>Email</label>
+            <input className="modern-input" type="email" name="email" value={form.email} onChange={handleChange} required />
+          </div>
+
+          <div className="form-group" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+            <div>
+              <label>Phone</label>
+              <input className="modern-input" type="tel" name="phone" value={form.phone} onChange={handleChange} />
+            </div>
+            <div>
+              <label>City</label>
+              <input className="modern-input" type="text" name="city" value={form.city} onChange={handleChange} required />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Select Role</label>
+            <select className="modern-select" value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="Buyer">Buyer</option>
+              <option value="Farmer">Farmer</option>
+              <option value="Expert">Expert</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Password</label>
+            <input className="modern-input" type="password" name="password" value={form.password} onChange={handleChange} required />
+          </div>
+
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input className="modern-input" type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} required />
+          </div>
+
+          <button type="submit" className="btn-signup">Create Account</button>
+        </form>
+
+        <div className="footer-link">
+          Already have an account? <span onClick={() => navigate("/login")}>Sign In</span>
+        </div>
+      </div>
+    </>
   );
-};
-
-const styles = {
-  container: {
-    fontFamily: "'Inter', sans-serif",
-    maxWidth: 400,
-    margin: "20px auto",
-    padding: 20,
-    background: "#fff",
-    borderRadius: 12,
-    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-  },
-  backButton: {
-    border: "none",
-    background: "transparent",
-    color: "#2e7d32",
-    fontSize: 16,
-    fontWeight: "600",
-    cursor: "pointer",
-    marginBottom: 10,
-  },
-  greeting: {
-    color: "#2e7d32",
-    marginBottom: 20,
-    fontWeight: "bold",
-    fontSize: 24,
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: 600,
-    marginBottom: 12,
-    color: "#444",
-    display: "flex",
-    flexDirection: "column",
-  },
-  input: {
-    marginTop: 6,
-    padding: "10px 12px",
-    fontSize: 16,
-    borderRadius: 8,
-    border: "1px solid #c8e6c9",
-    backgroundColor: "#f1f8f4",
-  },
-  signUpButton: {
-    backgroundColor: "#2e7d32",
-    color: "#fff",
-    padding: "12px 0",
-    border: "none",
-    borderRadius: 8,
-    fontWeight: "bold",
-    fontSize: 16,
-    cursor: "pointer",
-    marginTop: 15,
-  },
 };
 
 export default SignUpPage;

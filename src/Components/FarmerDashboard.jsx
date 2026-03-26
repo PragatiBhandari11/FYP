@@ -12,9 +12,12 @@ export default function FarmerDashboard() {
   const [collabs, setCollabs] = useState([]);
   const [demands, setDemands] = useState([]);
   const [articles, setArticles] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
+    const cachedCity = localStorage.getItem("userCity");
     if (!email) return;
 
     const fetchAllData = () => {
@@ -30,13 +33,22 @@ export default function FarmerDashboard() {
         .then(user => {
           setUserName(user.full_name);
           setFarmerId(user.id);
-          if (user.city) {
+          // Only fetch weather if NOT already fetching/fetched from cache
+          if (user.city && !cachedCity) {
             fetch(`http://localhost:5000/api/weather/${user.city}`)
               .then(res => res.json())
               .then(data => setWeather(data))
               .catch(err => console.error("Weather fetch error:", err));
           }
         });
+
+      // Fetch Weather immediately if city is known
+      if (cachedCity) {
+        fetch(`http://localhost:5000/api/weather/${cachedCity}`)
+          .then(res => res.json())
+          .then(data => setWeather(data))
+          .catch(err => console.error("Cached weather fetch error:", err));
+      }
 
       // Fetch Orders
       fetch(`http://localhost:5000/api/orders/farmer/${email}`)
@@ -67,6 +79,12 @@ export default function FarmerDashboard() {
         .then(res => res.json())
         .then(data => setDemands(data))
         .catch(err => console.error("Demands fetch error:", err));
+
+      // Fetch Notifications
+      fetch(`http://localhost:5000/api/notifications/${email}`)
+        .then(res => res.json())
+        .then(data => setNotifications(data))
+        .catch(err => console.error("Notif fetch error:", err));
     };
 
     fetchAllData();
@@ -88,6 +106,15 @@ export default function FarmerDashboard() {
     })
     .catch(err => console.error("Update status error:", err));
   };
+
+  const markAsRead = async (id) => {
+    try {
+      await fetch(`http://localhost:5000/api/notifications/${id}/read`, { method: "PUT" });
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: 1 } : n));
+    } catch (err) { console.error(err); }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <>
@@ -376,6 +403,55 @@ export default function FarmerDashboard() {
         .bottom-nav .active {
           color: #16a34a;
         }
+
+        /* Notif UI */
+        .notif-badge {
+          position: absolute;
+          top: -3px;
+          right: -3px;
+          background: #ef4444;
+          color: white;
+          font-size: 9px;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid white;
+        }
+
+        .notif-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.4);
+          z-index: 2000;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .notif-modal {
+          width: 320px;
+          max-height: 400px;
+          background: white;
+          border-radius: 16px;
+          padding: 20px;
+          overflow-y: auto;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .notif-item {
+          padding: 10px;
+          border-radius: 10px;
+          margin-bottom: 8px;
+          border-left: 3px solid #eee;
+          background: #f9f9f9;
+          cursor: pointer;
+        }
+        .notif-item.unread { border-left-color: #16a34a; background: #f0fdf4; }
+        .notif-item strong { display: block; font-size: 13px; }
+        .notif-item p { margin: 2px 0 0; font-size: 11px; color: #666; }
       `}</style>
 
       <div className="app">
@@ -389,7 +465,10 @@ export default function FarmerDashboard() {
               <div className="verified">Verified Farmer</div>
             </div>
           </div>
-          🔔
+          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowNotifications(true)}>
+            🔔
+            {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+          </div>
         </div>
 
         {/* Stats */}
@@ -578,6 +657,24 @@ export default function FarmerDashboard() {
             <div className="icon">👤</div>Profile
           </span>
         </div>
+
+        {showNotifications && (
+          <div className="notif-overlay" onClick={() => setShowNotifications(false)}>
+            <div className="notif-modal" onClick={e => e.stopPropagation()}>
+              <h3 style={{ margin: "0 0 15px 0" }}>Notifications</h3>
+              {notifications.length === 0 ? <p style={{ textAlign: "center", fontSize: "12px", color: "#999" }}>No notifications</p> : (
+                notifications.map(n => (
+                  <div key={n.id} className={`notif-item ${!n.is_read ? 'unread' : ''}`} onClick={() => !n.is_read && markAsRead(n.id)}>
+                    <strong>{n.title}</strong>
+                    <p>{n.message}</p>
+                    <div style={{ fontSize: "9px", color: "#999", marginTop: "4px" }}>{new Date(n.created_at).toLocaleString()}</div>
+                  </div>
+                ))
+              )}
+              <button onClick={() => setShowNotifications(false)} style={{ width: "100%", marginTop: "10px", padding: "8px", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>Close</button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

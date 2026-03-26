@@ -252,6 +252,19 @@ db.connect((err) => {
     )
   `;
 
+  // NOTIFICATIONS TABLE
+  const notificationsTable = `
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_email VARCHAR(100) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      message TEXT,
+      type ENUM('Order', 'Query', 'Response', 'Demand', 'System') NOT NULL,
+      is_read TINYINT(1) DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
   // Create demands table
   db.query(demandsTable, (err) => {
     if (err) {
@@ -294,6 +307,15 @@ db.connect((err) => {
       console.error(" Failed to create articles table:", err.message);
     } else {
       console.log(" articles table ready");
+    }
+  });
+
+  // Create notifications table
+  db.query(notificationsTable, (err) => {
+    if (err) {
+      console.error(" Failed to create notifications table:", err.message);
+    } else {
+      console.log(" notifications table ready");
     }
   });
 

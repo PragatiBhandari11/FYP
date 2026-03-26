@@ -72,6 +72,7 @@ router.post("/login", (req, res) => {
               id: 0,
               fullName: "System Admin",
               email: "admin@gmail.com",
+              city: "Kathmandu",
           },
           role: "Admin",
       });
@@ -113,6 +114,7 @@ router.post("/login", (req, res) => {
           id: user.id,
           fullName: user.full_name,
           email: user.email,
+          city: user.city,
         },
         role: user.role, // Dashboard redirect depends on this
       });

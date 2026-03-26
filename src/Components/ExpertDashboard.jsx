@@ -59,6 +59,8 @@ const ExpertDashboard = () => {
     { label: "Resolved", value: 0 },
   ]);
   const [recentQueries, setRecentQueries] = React.useState([]);
+  const [notifications, setNotifications] = React.useState([]);
+  const [showNotifications, setShowNotifications] = React.useState(false);
 
   React.useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -94,7 +96,22 @@ const ExpertDashboard = () => {
         setRecentQueries(reports.slice(0, 3));
       })
       .catch(err => console.error("Error fetching stats:", err));
+
+    // Fetch Notifications
+    fetch(`http://localhost:5000/api/notifications/${email}`)
+      .then(res => res.json())
+      .then(data => setNotifications(data))
+      .catch(err => console.error("Error fetching notifs:", err));
   }, []);
+
+  const markAsRead = async (id) => {
+    try {
+      await fetch(`http://localhost:5000/api/notifications/${id}/read`, { method: "PUT" });
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: 1 } : n));
+    } catch (err) { console.error(err); }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div style={styles.page}>
@@ -107,9 +124,12 @@ const ExpertDashboard = () => {
             <div style={styles.role}>{user.role}</div>
           </div>
         </div>
-        <button style={styles.bellButton} aria-label="Notifications">
-          🔔
-        </button>
+        <div style={{ position: 'relative' }} onClick={() => setShowNotifications(true)}>
+          <button style={styles.bellButton} aria-label="Notifications">
+            🔔
+          </button>
+          {unreadCount > 0 && <span style={styles.notifBadge}>{unreadCount}</span>}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -178,6 +198,25 @@ const ExpertDashboard = () => {
           </Link>
         ))}
       </nav>
+
+      {/* Notification Modal */}
+      {showNotifications && (
+        <div style={styles.notifOverlay} onClick={() => setShowNotifications(false)}>
+          <div style={styles.notifModal} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 15px 0" }}>Expert Alerts</h3>
+            {notifications.length === 0 ? <p style={{ textAlign: "center", fontSize: "14px", color: "#666" }}>No alerts yet.</p> : (
+              notifications.map(n => (
+                <div key={n.id} style={{...styles.notifItem, ...(n.is_read ? {} : styles.notifItemUnread)}} onClick={() => !n.is_read && markAsRead(n.id)}>
+                  <div style={{fontWeight: "bold", fontSize: "14px"}}>{n.title}</div>
+                  <div style={{fontSize: "12px", color: "#666", marginTop: "4px"}}>{n.message}</div>
+                  <div style={{fontSize: "10px", color: "#999", marginTop: "6px"}}>{new Date(n.created_at).toLocaleString()}</div>
+                </div>
+              ))
+            )}
+            <button onClick={() => setShowNotifications(false)} style={styles.closeBtn}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -260,6 +299,62 @@ const styles = {
   },
   navIcon: { fontSize: 20, marginBottom: 2 },
   navLabel: { fontWeight: "600", fontSize: 12 },
+  notifBadge: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    backgroundColor: "#ef4444",
+    color: "white",
+    fontSize: 10,
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "2px solid #3a8a3a",
+  },
+  notifOverlay: {
+    position: "fixed",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    zIndex: 2000,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notifModal: {
+    width: "320px",
+    maxHeight: "450px",
+    backgroundColor: "white",
+    borderRadius: "20px",
+    padding: "20px",
+    overflowY: "auto",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
+  },
+  notifItem: {
+    padding: "12px",
+    borderRadius: "12px",
+    marginBottom: "10px",
+    backgroundColor: "#f9f9f9",
+    borderLeft: "4px solid #ddd",
+    cursor: "pointer",
+  },
+  notifItemUnread: {
+    borderLeftColor: "#3a8a3a",
+    backgroundColor: "#f0fdf4",
+  },
+  closeBtn: {
+    width: "100%",
+    marginTop: "10px",
+    padding: "10px",
+    backgroundColor: "#3a8a3a",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  }
 };
 
 export default ExpertDashboard;

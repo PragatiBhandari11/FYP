@@ -7,6 +7,8 @@ export default function BuyerDashboard() {
   const [userName, setUserName] = useState("");
   const [demand, setDemand] = useState({ name: "", quantity: "", description: "" });
   const [submittingDemand, setSubmittingDemand] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Fetch the dynamic user name when the page loads
   useEffect(() => {
@@ -82,8 +84,25 @@ export default function BuyerDashboard() {
           }
         })
         .catch(err => console.error("Error fetching latest order:", err));
+
+      // Fetch Notifications
+      fetch(`http://localhost:5000/api/notifications/${buyerEmail}`)
+        .then(res => res.json())
+        .then(data => setNotifications(data))
+        .catch(err => console.error("Error fetching notifications:", err));
     }
   }, []);
+
+  const markAsRead = async (id) => {
+    try {
+      await fetch(`http://localhost:5000/api/notifications/${id}/read`, { method: "PUT" });
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: 1 } : n));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <>
@@ -260,6 +279,56 @@ export default function BuyerDashboard() {
 
         input.modern-input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; margin-bottom: 10px; background: white; }
         button.modern-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+
+        .notif-badge {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: #ef4444;
+          color: white;
+          font-size: 10px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid var(--primary);
+        }
+
+        .notif-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 2000;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          backdrop-filter: blur(4px);
+        }
+
+        .notif-modal {
+          width: 340px;
+          max-height: 500px;
+          background: white;
+          border-radius: 24px;
+          padding: 24px;
+          overflow-y: auto;
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+          position: relative;
+        }
+
+        .notif-item {
+          padding: 12px;
+          border-radius: 12px;
+          margin-bottom: 10px;
+          border-left: 4px solid #e2e8f0;
+          background: #f8fafc;
+        }
+        .notif-item.unread { border-left-color: var(--primary); background: var(--primary-light); }
+        .notif-item strong { display: block; font-size: 14px; margin-bottom: 2px; }
+        .notif-item p { margin: 0; font-size: 12px; color: #64748b; }
+        .notif-item span { font-size: 10px; color: #94a3b8; }
       `}</style>
 
       <div className="app">
@@ -273,7 +342,10 @@ export default function BuyerDashboard() {
               </div>
               <div className="header-icons">
                 <span onClick={() => navigate("/buyer-cart")}>🛒</span>
-                <span>🔔</span>
+                <div style={{ position: 'relative' }} onClick={() => setShowNotifications(true)}>
+                   <span>🔔</span>
+                   {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+                </div>
               </div>
             </div>
 
@@ -430,6 +502,35 @@ export default function BuyerDashboard() {
             <span>Profile</span>
           </div>
         </div>
+
+        {/* Notification Modal */}
+        {showNotifications && (
+          <div className="notif-overlay" onClick={() => setShowNotifications(false)}>
+            <div className="notif-modal" onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, fontSize: '20px' }}>Notifications</h2>
+                <button onClick={() => setShowNotifications(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+              </div>
+              
+              {notifications.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#64748b', padding: '40px 0' }}>No notifications yet!</p>
+              ) : (
+                notifications.map(n => (
+                  <div 
+                    key={n.id} 
+                    className={`notif-item ${!n.is_read ? 'unread' : ''}`}
+                    onClick={() => !n.is_read && markAsRead(n.id)}
+                  >
+                    <strong>{n.title}</strong>
+                    <p>{n.message}</p>
+                    <span>{new Date(n.created_at).toLocaleString()}</span>
+                    {!n.is_read && <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 'bold', marginTop: '5px' }}>Mark as read</div>}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
