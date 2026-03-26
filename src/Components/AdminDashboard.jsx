@@ -19,7 +19,9 @@ import {
   Menu,
   X,
   ChevronRight,
-  RefreshCcw
+  RefreshCcw,
+  Calendar,
+  Handshake
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -454,7 +456,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === "more" && (
+        {activeTab === "collabs" && (
           <div className="tab-content">
              <section style={{marginBottom: '32px'}}>
                 <h2 style={{fontSize: '18px', marginBottom: '16px'}}>Partnerships</h2>
@@ -481,7 +483,11 @@ export default function AdminDashboard() {
                   </div>
                 ))}
              </section>
+          </div>
+        )}
 
+        {activeTab === "calendar" && (
+          <div className="tab-content">
              <section style={{marginBottom: '32px'}}>
                 <h2 style={{fontSize: '18px', marginBottom: '16px'}}>Crop Calendar</h2>
                 <div style={{background: 'white', padding: '16px', borderRadius: '12px', marginBottom: '16px'}}>
@@ -513,9 +519,13 @@ export default function AdminDashboard() {
                   </div>
                 ))}
              </section>
+          </div>
+        )}
 
+        {activeTab === "more" && (
+          <div className="tab-content">
              <section>
-                <h2 style={{fontSize: '18px', marginBottom: '16px'}}>System</h2>
+                <h2 style={{fontSize: '18px', marginBottom: '16px'}}>System Settings</h2>
                 <div className="list-card" onClick={handleLogout} style={{cursor: 'pointer', background: '#fff1f2', border: '1px solid #fecaca'}}>
                   <div className="list-info">
                     <h4 style={{color: '#be123c'}}>Log Out</h4>
@@ -537,13 +547,13 @@ export default function AdminDashboard() {
           <Users size={22} />
           <span>Users</span>
         </div>
-        <div className={`nav-link ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
-          <Package size={22} />
-          <span>Stock</span>
+        <div className={`nav-link ${activeTab === "calendar" ? "active" : ""}`} onClick={() => setActiveTab("calendar")}>
+          <Calendar size={22} />
+          <span>Calendar</span>
         </div>
-        <div className={`nav-link ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>
-          <ShoppingBag size={22} />
-          <span>Orders</span>
+        <div className={`nav-link ${activeTab === "collabs" ? "active" : ""}`} onClick={() => setActiveTab("collabs")}>
+          <Handshake size={22} />
+          <span>Collab</span>
         </div>
         <div className={`nav-link ${activeTab === "more" ? "active" : ""}`} onClick={() => setActiveTab("more")}>
           <Settings size={22} />

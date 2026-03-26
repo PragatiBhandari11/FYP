@@ -11,12 +11,19 @@ export default function FarmerDashboard() {
   const [weather, setWeather] = useState({ temp: "--", condition: "Loading..." });
   const [collabs, setCollabs] = useState([]);
   const [demands, setDemands] = useState([]);
+  const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
     if (!email) return;
 
     const fetchAllData = () => {
+      
+      // Fetch Articles
+      fetch("http://localhost:5000/api/articles")
+        .then(res => res.json())
+        .then(data => setArticles(data))
+        .catch(err => console.error("Articles fetch error:", err));
       // Fetch user profile to get City
       fetch(`http://localhost:5000/api/user/${email}`)
         .then(res => res.json())
@@ -304,6 +311,46 @@ export default function FarmerDashboard() {
           font-weight: bold;
         }
 
+        /* Expert Knowledge Horizontal */
+        .article-list-horizontal {
+          display: flex;
+          gap: 15px;
+          overflow-x: auto;
+          padding-bottom: 10px;
+        }
+
+        .article-card-mini {
+          min-width: 200px;
+          background: #fff;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .article-img-mini {
+          height: 100px;
+          width: 100%;
+          object-fit: cover;
+        }
+
+        .article-info-mini {
+          padding: 10px;
+        }
+
+        .category-mini {
+          font-size: 10px;
+          color: #16a34a;
+          text-transform: uppercase;
+          font-weight: bold;
+        }
+
+        .article-info-mini p {
+          margin: 5px 0 0;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 1.3;
+        }
+
         /* Bottom nav */
         .bottom-nav {
           display: flex;
@@ -453,7 +500,6 @@ export default function FarmerDashboard() {
 
         {/* Collaborations */}
         <div className="section-title">Collaborations</div>
-
         <div className="collab-list">
           {collabs.length === 0 ? (
             <p style={{fontSize: "12px", color: "#666"}}>Looking for new partnerships...</p>
@@ -466,6 +512,48 @@ export default function FarmerDashboard() {
                   alt={c.name}
                 />
                 <p>{c.name}</p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Expert Knowledge */}
+        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+          <div className="section-title">Expert Knowledge</div>
+          <button 
+            onClick={() => navigate("/knowledge")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#16a34a",
+              fontSize: "13px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              padding: "0"
+            }}
+          >View All</button>
+        </div>
+
+        <div className="article-list-horizontal">
+          {articles.length === 0 ? (
+            <p style={{fontSize: "12px", color: "#666"}}>No articles yet.</p>
+          ) : (
+            articles.map(article => (
+              <div 
+                className="article-card-mini" 
+                key={article.id} 
+                onClick={() => navigate(`/article/${article.id}`)}
+                style={{cursor: "pointer"}}
+              >
+                <img
+                  className="article-img-mini"
+                  src={article.image_url ? `http://localhost:5000${article.image_url}` : "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2"}
+                  alt={article.title}
+                />
+                <div className="article-info-mini">
+                  <span className="category-mini">{article.category || "General"}</span>
+                  <p>{article.title.substring(0, 30)}...</p>
+                </div>
               </div>
             ))
           )}

@@ -52,22 +52,48 @@ const data = {
 
 const ExpertDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = React.useState({ name: "Expert", role: "Specialist", avatar: data.user.avatar });
+  const [user, setUser] = React.useState({ name: "Loading...", role: "", avatar: "" });
+  const [stats, setStats] = React.useState([
+    { label: "Active Queries", value: 0 },
+    { label: "Pending", value: 0 },
+    { label: "Resolved", value: 0 },
+  ]);
+  const [recentQueries, setRecentQueries] = React.useState([]);
 
   React.useEffect(() => {
     const email = localStorage.getItem("userEmail");
     if (!email) return;
 
+    // Fetch Profile
     fetch(`http://localhost:5000/api/user/${email}`)
       .then(res => res.json())
       .then(data => {
         setUser({
           name: data.full_name,
           role: "Expert Specialist",
-          avatar: "https://randomuser.me/api/portraits/men/32.jpg" // Placeholder for now
+          avatar: "https://randomuser.me/api/portraits/men/32.jpg" 
         });
       })
       .catch(err => console.error("Error fetching expert profile:", err));
+
+    // Fetch Stats
+    fetch("http://localhost:5000/api/disease/reports")
+      .then(res => res.json())
+      .then(reports => {
+        const total = reports.length;
+        const pending = reports.filter(r => r.status === 'Pending').length;
+        const resolved = reports.filter(r => r.status === 'Responded').length;
+        
+        setStats([
+          { label: "Active Queries", value: total },
+          { label: "Pending", value: pending },
+          { label: "Resolved", value: resolved },
+        ]);
+
+        // Get top 3 latest questions (assuming they are sorted by backend, or we can sort here)
+        setRecentQueries(reports.slice(0, 3));
+      })
+      .catch(err => console.error("Error fetching stats:", err));
   }, []);
 
   return (
@@ -88,7 +114,7 @@ const ExpertDashboard = () => {
 
       {/* Stats Cards */}
       <div style={styles.statsContainer}>
-        {data.stats.map((stat) => (
+        {stats.map((stat) => (
           <div key={stat.label} style={styles.statCard}>
             <div style={styles.statValue}>{stat.value}</div>
             <div style={styles.statLabel}>{stat.label}</div>
@@ -121,23 +147,26 @@ const ExpertDashboard = () => {
 
       {/* Question List */}
       <div style={{ paddingBottom: "20px" }}>
-        {data.questions.map((q, i) => (
-          <div key={i} style={styles.questionCard}>
-            <span
-              style={{
-                ...styles.tag,
-                backgroundColor: q.tagColor,
-              }}
-            >
-              {q.tag}
-            </span>
-            <div style={styles.questionText}>{q.question}</div>
-            <div style={styles.author}>
-              <span>👤 {q.author}</span> • <span>{q.location}</span>
+        {recentQueries.length > 0 ? (
+          recentQueries.map((q, i) => (
+            <div key={i} onClick={() => navigate("/queries")} style={{...styles.questionCard, cursor: "pointer"}}>
+              <span
+                style={{
+                  ...styles.tag,
+                  backgroundColor: q.status === 'Pending' ? "#d32f2f" : "#2e7d32",
+                }}
+              >
+                {q.status.toUpperCase()}
+              </span>
+              <div style={styles.questionText}>{q.description.substring(0, 60)}...</div>
+              <div style={styles.author}>
+                <span>👤 {q.farmer_name || "Farmer"}</span> • <span>{new Date(q.created_at).toLocaleDateString()}</span>
+              </div>
             </div>
-            <div style={styles.time}>{q.time}</div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>No recent queries found.</div>
+        )}
       </div>
 
       {/* FUNCTIONAL BOTTOM NAVIGATION */}

@@ -84,6 +84,8 @@ function App() {
             ? <Navigate to="/admin-dashboard" />
             : localStorage.getItem("userRole")?.toLowerCase() === "farmer"
             ? <Navigate to="/farmer-profile" />
+            : localStorage.getItem("userRole")?.toLowerCase() === "expert"
+            ? <Navigate to="/expert-profile" />
             : <Navigate to="/buyer-profile" />
         } />
 

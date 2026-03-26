@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export default function BuyerDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [userName, setUserName] = useState("Sarah");
+  const [userName, setUserName] = useState("");
   const [demand, setDemand] = useState({ name: "", quantity: "", description: "" });
   const [submittingDemand, setSubmittingDemand] = useState(false);
 
@@ -138,28 +138,6 @@ export default function BuyerDashboard() {
           padding: 16px;
         }
 
-        .categories {
-          display: flex;
-          justify-content: space-between;
-        }
-
-        .category {
-          width: 70px;
-          height: 70px;
-          background: #f1f1f1;
-          border-radius: 14px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          cursor: pointer;
-        }
-
-        .category span {
-          font-size: 12px;
-          margin-top: 4px;
-        }
 
         .order {
           background: #fff3cd;
@@ -262,16 +240,6 @@ export default function BuyerDashboard() {
           )}
         </div>
 
-        {/* Categories */}
-        <section>
-          <h3>Categories</h3>
-          <div className="categories">
-            <div className="category" onClick={() => navigate("/buyer-explore?category=vegetable")}><span>Veg</span></div>
-            <div className="category" onClick={() => navigate("/buyer-explore?category=fruits")}><span>Fruits</span></div>
-            <div className="category" onClick={() => navigate("/buyer-explore?category=plant")}><span>Plants</span></div>
-            <div className="category" onClick={() => navigate("/buyer-explore?category=dairy")}><span>Dairy</span></div>
-          </div>
-        </section>
 
         {/* Demand Alert Section */}
         <section style={{ background: "#fdf8e6", margin: "16px", borderRadius: "16px", padding: "16px" }}>
