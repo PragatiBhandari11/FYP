@@ -238,6 +238,19 @@ db.connect((err) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
+  
+  // ARTICLES TABLE
+  const articlesTable = `
+    CREATE TABLE IF NOT EXISTS articles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      category VARCHAR(100),
+      content TEXT NOT NULL,
+      author_email VARCHAR(100) NOT NULL,
+      image_url VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
 
   // Create demands table
   db.query(demandsTable, (err) => {
@@ -272,6 +285,15 @@ db.connect((err) => {
       console.error(" Failed to create farmer_activities table:", err.message);
     } else {
       console.log(" farmer_activities table ready");
+    }
+  });
+
+  // Create articles table
+  db.query(articlesTable, (err) => {
+    if (err) {
+      console.error(" Failed to create articles table:", err.message);
+    } else {
+      console.log(" articles table ready");
     }
   });
 

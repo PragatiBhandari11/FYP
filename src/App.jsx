@@ -23,6 +23,10 @@ import AdminDashboard from "./Components/AdminDashboard";
 import MyProducts from "./Components/MyProducts";
 import ExpertDiseaseReports from "./Components/ExpertDiseaseReports";
 import FarmerCalendarPage from "./Components/FarmerCalendarPage";
+import Queries from "./Components/Queries";
+import KnowledgePage from "./Components/KnowledgePage";
+import ArticleForm from "./Components/ArticleForm";
+import ArticleDetail from "./Components/ArticleDetail";
 
 
 
@@ -57,6 +61,11 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/my-farm" element={<MyProducts />} />
         <Route path="/buyer-cart" element={<CartPage />} />
+        <Route path="/queries" element={<Queries />} />
+        <Route path="/knowledge" element={<KnowledgePage />} />
+        <Route path="/write-article" element={<ArticleForm />} />
+        <Route path="/edit-article/:id" element={<ArticleForm />} />
+        <Route path="/article/:id" element={<ArticleDetail />} />
 
         <Route path="/buyer-orders" element={<OrdersPage />} />
 

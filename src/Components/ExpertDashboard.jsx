@@ -14,7 +14,7 @@ const data = {
   ],
   tools: [
     { label: "Disease Reports", icon: "🌡️", path: "/expert-disease-reports" },
-    { label: "Write Article", icon: "📝" },
+    { label: "Write Article", icon: "📝", path: "/write-article" },
   ],
   questions: [
     {
