@@ -11,14 +11,11 @@ router.post("/checkout", (req, res) => {
     return res.status(400).json({ message: "Missing buyer or total amount details." });
   }
 
-  // Generate a random order number (e.g. ORD-1024)
   const orderNumber = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  // Begin transaction
   db.beginTransaction((err) => {
     if (err) return res.status(500).json({ message: "Transaction start failed." });
 
-    // Step 1: Create the parent Order record
     const insertOrderSql = "INSERT INTO orders (order_number, buyer_email, total_amount, payment_method, payment_status) VALUES (?, ?, ?, 'COD', 'Pending')";
     db.query(insertOrderSql, [orderNumber, buyerEmail, totalAmount], (err1, orderResult) => {
       if (err1) {
@@ -27,7 +24,6 @@ router.post("/checkout", (req, res) => {
 
       const orderId = orderResult.insertId;
 
-      // Step 2: Extract current cart items combining with locked-in prices from the main products table
       const fetchCartSql = `
         SELECT c.product_id, c.quantity, p.price, p.name 
         FROM cart_items c
@@ -40,7 +36,6 @@ router.post("/checkout", (req, res) => {
           return db.rollback(() => res.status(400).json({ message: "Cart is empty or failed to fetch." }));
         }
 
-        // Prepare bulk insert mapping for order_items table securely locking historical prices
         const orderItemsValues = cartItems.map(item => [
           orderId, item.product_id, item.name, item.price, item.quantity
         ]);
@@ -51,7 +46,6 @@ router.post("/checkout", (req, res) => {
             return db.rollback(() => res.status(500).json({ message: "Failed to save order items." }));
           }
 
-          // Step 3: Successfully transferred. Wipe the cart clean synchronously.
           const wipeCartSql = "DELETE FROM cart_items WHERE buyer_email = ?";
           db.query(wipeCartSql, [buyerEmail], (err4) => {
             if (err4) {
@@ -86,7 +80,6 @@ router.post("/initiate-khalti", (req, res) => {
   const orderNumber = `KLT-${Date.now()}`;
   const amountInPaisa = Math.round(parseFloat(totalAmount) * 100);
 
-  // Begin transaction
   db.beginTransaction((err) => {
     if (err) return res.status(500).json({ message: "Transaction start failed." });
 
@@ -96,7 +89,6 @@ router.post("/initiate-khalti", (req, res) => {
 
       const orderId = orderResult.insertId;
 
-      // Extract cart items
       const fetchCartSql = `
         SELECT c.product_id, c.quantity, p.price, p.name 
         FROM cart_items c
@@ -117,10 +109,11 @@ router.post("/initiate-khalti", (req, res) => {
             console.log("--- Khalti Initiation Debug ---");
             console.log("Secret Key Loaded:", !!process.env.KHALTI_SECRET_KEY);
             console.log("Key Length:", process.env.KHALTI_SECRET_KEY?.length);
-            
+
             const payload = {
-              "return_url": "http://localhost:5173/payment-success",
-              "website_url": "http://localhost:5173/",
+              // ✅ FIX: Make sure this matches your React Router path exactly
+              "return_url": "http://localhost:5173/payment/success",
+              "website_url": "http://localhost:5173",
               "amount": amountInPaisa,
               "purchase_order_id": orderNumber,
               "purchase_order_name": "AgroConnect Order",
@@ -131,7 +124,10 @@ router.post("/initiate-khalti", (req, res) => {
             };
             console.log("Payload:", JSON.stringify(payload, null, 2));
 
-            const khaltiResponse = await fetch("https://a.khalti.com/api/v2/epayment/initiate/", {
+            // ✅ FIX #1: Corrected Khalti API URL (was a.khalti.com — does not exist)
+            // Use dev.khalti.com for sandbox testing
+            // Use khalti.com for live/production
+            const khaltiResponse = await fetch("https://dev.khalti.com/api/v2/epayment/initiate/", {
               method: "POST",
               headers: {
                 "Authorization": `Key ${process.env.KHALTI_SECRET_KEY}`,
@@ -146,7 +142,7 @@ router.post("/initiate-khalti", (req, res) => {
 
             if (khaltiData.pidx) {
               console.log("✅ Khalti pidx generated:", khaltiData.pidx);
-              // Store pidx in the order
+
               db.query("UPDATE orders SET pidx = ? WHERE id = ?", [khaltiData.pidx, orderId], (err4) => {
                 if (err4) {
                   console.error("❌ Failed to store pidx in DB:", err4.message);
@@ -164,9 +160,9 @@ router.post("/initiate-khalti", (req, res) => {
               });
             } else {
               console.error("❌ Khalti Initiation Failed. Full Response:", JSON.stringify(khaltiData, null, 2));
-              db.rollback(() => res.status(400).json({ 
-                message: "Khalti initiation failed.", 
-                error: khaltiData 
+              db.rollback(() => res.status(400).json({
+                message: "Khalti initiation failed.",
+                error: khaltiData
               }));
             }
           } catch (error) {
@@ -186,7 +182,10 @@ router.post("/verify-khalti", async (req, res) => {
   if (!pidx) return res.status(400).json({ message: "Missing pidx." });
 
   try {
-    const verifyResponse = await fetch("https://a.khalti.com/api/v2/epayment/lookup/", {
+    // ✅ FIX #1: Corrected Khalti API URL (was a.khalti.com — does not exist)
+    // Use dev.khalti.com for sandbox testing
+    // Use khalti.com for live/production
+    const verifyResponse = await fetch("https://dev.khalti.com/api/v2/epayment/lookup/", {
       method: "POST",
       headers: {
         "Authorization": `Key ${process.env.KHALTI_SECRET_KEY}`,
@@ -196,18 +195,25 @@ router.post("/verify-khalti", async (req, res) => {
     });
 
     const statusData = await verifyResponse.json();
+    console.log("Khalti Verify Response:", statusData);
 
     if (statusData.status === "Completed") {
-      // Update order status
       const updateSql = "UPDATE orders SET payment_status = 'Paid', status = 'Order Placed' WHERE pidx = ?";
       db.query(updateSql, [pidx], (err) => {
         if (err) return res.status(500).json({ message: "Database update failed." });
 
-        // Wipe the cart clean for this buyer
-        const wipeCartSql = "DELETE FROM cart_items WHERE buyer_email = (SELECT buyer_email FROM orders WHERE pidx = ? LIMIT 1)";
-        db.query(wipeCartSql, [pidx], (err2) => {
-          if (err2) console.warn("Failed to clear cart after payment:", err2.message);
-          res.status(200).json({ message: "Payment Verified! ✅", status: "Completed" });
+        // ✅ FIX #3: Safer cart clearing — two separate queries instead of risky subquery
+        db.query("SELECT buyer_email FROM orders WHERE pidx = ? LIMIT 1", [pidx], (err2, rows) => {
+          if (err2 || !rows || rows.length === 0) {
+            console.warn("Could not find buyer email to clear cart.");
+            return res.status(200).json({ message: "Payment Verified! ✅", status: "Completed" });
+          }
+
+          const buyerEmail = rows[0].buyer_email;
+          db.query("DELETE FROM cart_items WHERE buyer_email = ?", [buyerEmail], (err3) => {
+            if (err3) console.warn("Failed to clear cart after payment:", err3.message);
+            res.status(200).json({ message: "Payment Verified! ✅", status: "Completed" });
+          });
         });
       });
     } else {
@@ -218,6 +224,7 @@ router.post("/verify-khalti", async (req, res) => {
     res.status(500).json({ message: "Internal verification error." });
   }
 });
+
 // 2. FETCH ALL ORDERS FOR A BUYER
 router.get("/:email", (req, res) => {
   const { email } = req.params;
@@ -272,24 +279,20 @@ router.put("/:id/status", (req, res) => {
   db.beginTransaction((err) => {
     if (err) return res.status(500).json({ message: "Transaction failed" });
 
-    // Step 1: Update status
     const updateSql = "UPDATE orders SET status = ? WHERE id = ?";
     db.query(updateSql, [status, id], (err1) => {
       if (err1) return db.rollback(() => res.status(500).json({ message: "Update failed" }));
 
-      // Step 2: Auto-assign vehicle if status is "Packing" AND no vehicle is assigned
       if (status === "Packing") {
         const checkSql = "SELECT vehicle_id FROM orders WHERE id = ?";
         db.query(checkSql, [id], (errC, rows) => {
           if (errC || rows.length === 0) return db.rollback(() => res.status(500).json({ message: "Check failed" }));
 
           if (!rows[0].vehicle_id) {
-            // Find an available vehicle
             const findSql = "SELECT id FROM delivery_vehicles WHERE status = 'Available' LIMIT 1";
             db.query(findSql, (errF, vRows) => {
               if (vRows && vRows.length > 0) {
                 const vehicleId = vRows[0].id;
-                // Assign and update vehicle status
                 const assignSql = "UPDATE orders SET vehicle_id = ? WHERE id = ?";
                 db.query(assignSql, [vehicleId, id], (errA) => {
                   if (errA) return db.rollback(() => res.status(500).json({ message: "Assign failed" }));
@@ -305,7 +308,6 @@ router.put("/:id/status", (req, res) => {
                   });
                 });
               } else {
-                // No vehicle available, but status is updated
                 db.commit((commitErr) => {
                   if (commitErr) return db.rollback(() => res.status(500).json({ message: "Commit failed" }));
                   res.status(200).json({ message: `Status updated to ${status} ✅ (No available vehicles for auto-assignment)` });
@@ -320,7 +322,6 @@ router.put("/:id/status", (req, res) => {
           }
         });
       } else if (status === "Delivered") {
-        // Auto-Release vehicle when delivered
         const checkSql = "SELECT vehicle_id FROM orders WHERE id = ?";
         db.query(checkSql, [id], (errC, rows) => {
           if (rows && rows[0]?.vehicle_id) {

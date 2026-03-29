@@ -14,6 +14,12 @@ export default function FarmerDashboard() {
   const [articles, setArticles] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
+  };
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -101,7 +107,7 @@ export default function FarmerDashboard() {
     })
     .then(res => res.json())
     .then(data => {
-      alert(data.message);
+      showToast(data.message, data.success !== false ? "success" : "error");
       if (window.refreshDashboard) window.refreshDashboard();
     })
     .catch(err => console.error("Update status error:", err));
@@ -452,6 +458,40 @@ export default function FarmerDashboard() {
         .notif-item.unread { border-left-color: #16a34a; background: #f0fdf4; }
         .notif-item strong { display: block; font-size: 13px; }
         .notif-item p { margin: 2px 0 0; font-size: 11px; color: #666; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="app">
@@ -672,6 +712,15 @@ export default function FarmerDashboard() {
                 ))
               )}
               <button onClick={() => setShowNotifications(false)} style={{ width: "100%", marginTop: "10px", padding: "8px", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>Close</button>
+            </div>
+          </div>
+        )}
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
             </div>
           </div>
         )}

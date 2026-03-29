@@ -8,6 +8,13 @@ export default function FarmerCalendarPage() {
   const [activities, setActivities] = useState([]);
   const [newTask, setNewTask] = useState({ name: "", date: "", notes: "" });
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
+  };
+
 
   const farmerEmail = localStorage.getItem("userEmail");
 
@@ -38,8 +45,7 @@ export default function FarmerCalendarPage() {
 
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!farmerEmail) return alert("Please login.");
-
+    if (!farmerEmail) return showToast("Please login.", "error");
     try {
       const res = await fetch("http://localhost:5000/api/calendar/activities", {
         method: "POST",
@@ -52,11 +58,13 @@ export default function FarmerCalendarPage() {
         }),
       });
       if (res.ok) {
+        showToast("Task added! 📅");
         setNewTask({ name: "", date: "", notes: "" });
         fetchActivities();
       }
     } catch (err) {
       console.error(err);
+      showToast("Failed to add task.", "error");
     }
   };
 
@@ -80,9 +88,13 @@ export default function FarmerCalendarPage() {
       const res = await fetch(`http://localhost:5000/api/calendar/activities/${id}`, {
         method: "DELETE",
       });
-      if (res.ok) fetchActivities();
+      if (res.ok) {
+        showToast("Task deleted.");
+        fetchActivities();
+      }
     } catch (err) {
       console.error(err);
+      showToast("Failed to delete task.", "error");
     }
   };
 
@@ -140,6 +152,40 @@ export default function FarmerCalendarPage() {
         .bottom-nav { display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #e5e7eb; background: #fff; margin-top: auto; }
         .bottom-nav span { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: #6b7280; cursor: pointer; }
         .bottom-nav .active { color: #16a34a; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="app-container">
@@ -215,6 +261,15 @@ export default function FarmerCalendarPage() {
             <div className="icon">👤</div>Profile
           </span>
         </div>
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

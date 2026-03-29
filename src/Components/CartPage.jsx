@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { QRCodeCanvas } from "qrcode.react";
 
 export default function CartPage() {
   const navigate = useNavigate();
 
   const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [payment, setPayment] = useState("khalti");
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const buyerEmail = localStorage.getItem("userEmail");
-const [showKhaltiModal, setShowKhaltiModal] = useState(false);
-const [khaltiUrl, setKhaltiUrl] = useState("");
 
   const fetchCart = async () => {
     if (!buyerEmail) {
       setLoading(false);
       return;
     }
+    setLoading(true);
     try {
       const res = await fetch(`http://localhost:5000/api/cart/${buyerEmail}`);
       const data = await res.json();
@@ -40,7 +39,6 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cartId, delta })
       });
-      // Refresh cart visually after database update
       fetchCart();
     } catch (err) {
       console.error("Failed to update cart quantity", err);
@@ -49,33 +47,33 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
 
   const handleCheckout = async () => {
     if (cart.length === 0) return alert("Your cart is empty!");
+    setCheckingOut(true);
 
     if (payment === "khalti") {
       try {
         const response = await fetch("http://localhost:5000/api/orders/initiate-khalti", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            buyerEmail, 
+          body: JSON.stringify({
+            buyerEmail,
             totalAmount: total.toFixed(2),
             buyerName: localStorage.getItem("userName")
           })
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.payment_url) {
-            setKhaltiUrl(data.payment_url);
-            setShowKhaltiModal(true);
-          } else {
-            alert("Payment initiation failed. Please try again.");
-          }
+        const data = await response.json();
+
+        if (response.ok && data.payment_url) {
+          // ✅ FIX #4: Direct redirect to Khalti — simpler & more reliable than QR modal
+          window.location.href = data.payment_url;
         } else {
-          const err = await response.json();
-          alert(err.message || "Khalti initiation failed.");
+          alert(data.message || "Khalti initiation failed. Please try again.");
         }
       } catch (error) {
         console.error("Khalti initiation error:", error);
+        alert("Network error. Please check your connection.");
+      } finally {
+        setCheckingOut(false);
       }
     } else {
       // Cash on Delivery
@@ -97,11 +95,13 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
         }
       } catch (error) {
         console.error("Checkout error:", error);
+        alert("Network error. Please check your connection.");
+      } finally {
+        setCheckingOut(false);
       }
     }
   };
 
-  // Ensure calculations correctly parse database decimal strings
   const subtotal = cart.reduce((sum, i) => sum + (parseFloat(i.price) * i.qty), 0);
   const delivery = cart.length > 0 ? 2.5 : 0;
   const tax = subtotal * 0.05;
@@ -240,71 +240,13 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
           cursor: pointer;
           margin-top: 10px;
           box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+          transition: opacity 0.2s;
         }
 
         .checkout-btn:disabled {
           background: #cbd5e1;
           cursor: not-allowed;
           box-shadow: none;
-        }
-
-        /* QR Modal Styling */
-        .modal-overlay {
-          position: absolute;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.6);
-          backdrop-filter: blur(8px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .qr-modal {
-          width: 85%;
-          background: #fff;
-          border-radius: 28px;
-          padding: 24px;
-          text-align: center;
-          box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-          animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-          from { transform: translateY(50px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-
-        .qr-container {
-          background: #f8fafc;
-          padding: 20px;
-          border-radius: 16px;
-          display: inline-block;
-          margin: 16px 0;
-          border: 1px solid #f1f5f9;
-        }
-
-        .qr-title { font-weight: 800; font-size: 1.2rem; color: #1e293b; }
-        .qr-subtitle { font-size: 0.9rem; color: #64748b; margin-top: 4px; }
-
-        .btn-open-app {
-          display: block;
-          width: 100%;
-          padding: 14px;
-          background: #5c2d91; /* Khalti Color */
-          color: white;
-          text-decoration: none;
-          border-radius: 12px;
-          font-weight: 700;
-          margin-top: 20px;
-        }
-
-        .btn-close {
-          display: block;
-          margin-top: 12px;
-          color: #64748b;
-          font-size: 0.9rem;
-          cursor: pointer;
         }
 
         .bottom-nav {
@@ -329,7 +271,6 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
 
         .nav-item.active { color: #22c55e; }
         .nav-item .icon { font-size: 20px; }
-
       `}</style>
 
       <div className="app">
@@ -338,14 +279,13 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
 
           {loading ? (
             <div style={{ textAlign: "center", padding: "60px", color: "#64748b" }}>
-              <div className="spinner"></div>
               <p>Fetching your items...</p>
             </div>
           ) : cart.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
               <div style={{ fontSize: "64px", marginBottom: "20px" }}>🧺</div>
               <p style={{ fontWeight: 600 }}>Your cart is empty</p>
-              <button 
+              <button
                 onClick={() => navigate("/buyer-explore")}
                 style={{ marginTop: "20px", color: "#22c55e", background: "none", border: "none", fontWeight: 700 }}
               >
@@ -379,7 +319,7 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <span style={{ fontSize: "20px" }}>💜</span>
-                    <strong>Khalti (QR / Web)</strong>
+                    <strong>Khalti</strong>
                   </div>
                   {payment === "khalti" && <span>✅</span>}
                 </div>
@@ -404,45 +344,14 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
                 <button
                   className="checkout-btn"
                   onClick={handleCheckout}
+                  disabled={checkingOut}
                 >
-                  Complete Order
+                  {checkingOut ? "Processing..." : "Complete Order"}
                 </button>
               </div>
             </>
           )}
-
         </div>
-
-        {/* Khalti QR Modal */}
-        {showKhaltiModal && (
-          <div className="modal-overlay">
-            <div className="qr-modal">
-              <div className="qr-title">Scan to Pay</div>
-              <div className="qr-subtitle">Pay securely via Khalti</div>
-              
-              <div className="qr-container">
-                <QRCodeCanvas 
-                  value={khaltiUrl} 
-                  size={200}
-                  level="H"
-                  includeMargin={true}
-                />
-              </div>
-
-              <p style={{ fontSize: "12px", color: "#64748b", margin: "10px 0" }}>
-                Scan this QR with your Khalti app
-              </p>
-
-              <a href={khaltiUrl} target="_blank" rel="noopener noreferrer" className="btn-open-app">
-                Open Khalti App
-              </a>
-
-              <div className="btn-close" onClick={() => setShowKhaltiModal(false)}>
-                Cancel Payment
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="bottom-nav">
           <div className="nav-item" onClick={() => navigate("/buyer-dashboard")}>
@@ -470,4 +379,3 @@ const [khaltiUrl, setKhaltiUrl] = useState("");
     </>
   );
 }
-

@@ -8,7 +8,14 @@ export default function MyProducts() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [menuOpen, setMenuOpen] = useState(null); // Track which product's menu is open
+  const [menuOpen, setMenuOpen] = useState(null); 
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
+  };
+
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -52,15 +59,15 @@ export default function MyProducts() {
         const res = await fetch(`http://localhost:5000/api/products/${id}`, { method: "DELETE" });
         const data = await res.json();
         if (res.ok) {
-          alert("Product removed! ✅");
+          showToast("Product removed! ✅");
           fetchProducts();
           setMenuOpen(null);
         } else {
-          alert(`Failed to delete product: ${data.message || "Unknown error"}`);
+          showToast(`Failed to delete product: ${data.message || "Unknown error"}`, "error");
         }
       } catch (err) {
         console.error(err);
-        alert("Cannot connect to server for deletion.");
+        showToast("Cannot connect to server for deletion.", "error");
       }
     }
   };
@@ -106,6 +113,40 @@ export default function MyProducts() {
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: #7a7a7a; cursor: pointer; }
         .nav-item.active { color: #2e7d32; }
         .icon { font-size: 20px; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="page">
@@ -191,6 +232,15 @@ export default function MyProducts() {
             <div className="icon">👤</div>Profile
           </span>
         </div>
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -15,8 +15,12 @@ export default function AddProduct() {
     image_url: "", // For existing image display
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -33,7 +37,7 @@ export default function AddProduct() {
             image_url: data.image_url
           });
         })
-        .catch(err => setError("Failed to load product data"));
+        .catch(err => showToast("Failed to load product data", "error"));
     }
   }, [id, isEdit]);
 
@@ -48,12 +52,10 @@ export default function AddProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess("");
 
     const farmerId = localStorage.getItem("userEmail");
     if (!farmerId) {
-      setError("You must be logged in.");
+      showToast("You must be logged in.", "error");
       setLoading(false);
       return;
     }
@@ -85,18 +87,18 @@ export default function AddProduct() {
       const result = await response.json();
 
       if (response.ok) {
-        setSuccess(isEdit ? "Product updated successfully!" : "Product added successfully!");
+        showToast(isEdit ? "Product updated successfully! ✅" : "Product added successfully! ✅");
         if (!isEdit) {
            setFormData({ name: "", category: "Vegetable", price: "", quantity: "", image: null, image_url: "" });
            e.target.reset();
         } else {
-           setTimeout(() => navigate("/my-farm"), 1500); // Go back after update
+           setTimeout(() => navigate("/my-farm"), 1500); 
         }
       } else {
-        setError(result.message || "Operation failed");
+        showToast(result.message || "Operation failed", "error");
       }
     } catch (err) {
-      setError("Cannot connect to server.");
+      showToast("Cannot connect to server.", "error");
     } finally {
       setLoading(false);
     }
@@ -143,14 +145,45 @@ export default function AddProduct() {
         .error-msg { background: #fde8e8; color: #c81e1e; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; text-align: center; }
         .success-msg { background: #def7ec; color: #03543f; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; text-align: center; }
         .current-img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ddd; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="app-container">
         <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
         <h2>{isEdit ? "Update Product" : "Add New Product"}</h2>
-
-        {error && <div className="error-msg">{error}</div>}
-        {success && <div className="success-msg">{success}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -190,6 +223,15 @@ export default function AddProduct() {
             {loading ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Product" : "List Product")}
           </button>
         </form>
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
