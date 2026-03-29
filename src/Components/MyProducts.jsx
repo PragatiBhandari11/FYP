@@ -12,7 +12,7 @@ export default function MyProducts() {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeFilter === "All" || product.category === activeFilter;
+    const matchesCategory = activeFilter === "All" || product.category?.toLowerCase() === activeFilter.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
@@ -110,13 +110,13 @@ export default function MyProducts() {
 
       <div className="page">
         <div className="header">
-          <h3 onClick={() => navigate("/farmer-dashboard")} style={{cursor: "pointer"}}>← My Farm</h3>
+          <h3 onClick={() => navigate("/farmer-dashboard")} style={{ cursor: "pointer" }}>← My Farm</h3>
           <div className="bell">🔔</div>
         </div>
 
         <div className="search">
-          <input 
-            placeholder="🔍 Search my products..." 
+          <input
+            placeholder="🔍 Search my products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -124,8 +124,8 @@ export default function MyProducts() {
 
         <div className="filters">
           {["All", "Vegetable", "Fruits", "Dairy", "Plant"].map(cat => (
-            <div 
-              key={cat} 
+            <div
+              key={cat}
               className={`filter ${activeFilter === cat ? "active" : ""}`}
               onClick={() => setActiveFilter(cat)}
             >
@@ -135,20 +135,20 @@ export default function MyProducts() {
         </div>
 
         <div className="product-list">
-          {error && <div style={{color: "red", textAlign: "center", padding: "20px"}}>{error}</div>}
-          {loading && <div style={{textAlign: "center", padding: "20px"}}>Loading products...</div>}
-          
+          {error && <div style={{ color: "red", textAlign: "center", padding: "20px" }}>{error}</div>}
+          {loading && <div style={{ textAlign: "center", padding: "20px" }}>Loading products...</div>}
+
           {!loading && !error && filteredProducts.length === 0 ? (
             <div className="empty-state">
-              <div style={{fontSize: "40px"}}>🚜</div>
+              <div style={{ fontSize: "40px" }}>🚜</div>
               <h4>No Products Found</h4>
               <p>We couldn't find any products matching your search or filter.</p>
             </div>
           ) : (
             filteredProducts.map(product => (
               <div className="product" key={product.id}>
-                <img 
-                  src={product.image_url ? `http://localhost:5000${product.image_url}` : "https://via.placeholder.com/56"} 
+                <img
+                  src={product.image_url ? `http://localhost:5000${product.image_url}` : "https://via.placeholder.com/56"}
                   alt={product.name}
                   onError={(e) => { e.target.src = "https://via.placeholder.com/56?text=No+Img" }}
                 />
@@ -160,7 +160,7 @@ export default function MyProducts() {
                   </div>
                 </div>
                 <div className="menu-btn" onClick={() => setMenuOpen(menuOpen === product.id ? null : product.id)}>⋮</div>
-                
+
                 {menuOpen === product.id && (
                   <div className="dropdown">
                     <button onClick={() => navigate(`/edit-product/${product.id}`)}>✏️ Edit</button>

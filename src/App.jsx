@@ -27,6 +27,8 @@ import Queries from "./Components/Queries";
 import KnowledgePage from "./Components/KnowledgePage";
 import ArticleForm from "./Components/ArticleForm";
 import ArticleDetail from "./Components/ArticleDetail";
+import PaymentSuccess from "./Components/PaymentSuccess";
+import PaymentFailure from "./Components/PaymentFailure";
 
 
 
@@ -68,6 +70,8 @@ function App() {
         <Route path="/article/:id" element={<ArticleDetail />} />
 
         <Route path="/buyer-orders" element={<OrdersPage />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failure" element={<PaymentFailure />} />
 
 
         {/* Buyer Explore */}
@@ -83,10 +87,10 @@ function App() {
           localStorage.getItem("userRole")?.toLowerCase() === "admin"
             ? <Navigate to="/admin-dashboard" />
             : localStorage.getItem("userRole")?.toLowerCase() === "farmer"
-            ? <Navigate to="/farmer-profile" />
-            : localStorage.getItem("userRole")?.toLowerCase() === "expert"
-            ? <Navigate to="/expert-profile" />
-            : <Navigate to="/buyer-profile" />
+              ? <Navigate to="/farmer-profile" />
+              : localStorage.getItem("userRole")?.toLowerCase() === "expert"
+                ? <Navigate to="/expert-profile" />
+                : <Navigate to="/buyer-profile" />
         } />
 
 

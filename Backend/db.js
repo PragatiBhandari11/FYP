@@ -70,16 +70,19 @@ db.connect((err) => {
   `;
 
   // Orders Table (High level metadata)
-  const ordersTable = `
-     CREATE TABLE IF NOT EXISTS orders (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       order_number VARCHAR(50) NOT NULL UNIQUE,
-       buyer_email VARCHAR(100) NOT NULL,
-       total_amount DECIMAL(10,2) NOT NULL,
-       status VARCHAR(50) DEFAULT 'Order Placed',
-       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-     )
-  `;
+     const ordersTable = `
+        CREATE TABLE IF NOT EXISTS orders (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          order_number VARCHAR(50) NOT NULL UNIQUE,
+          buyer_email VARCHAR(100) NOT NULL,
+          total_amount DECIMAL(10,2) NOT NULL,
+          status VARCHAR(50) DEFAULT 'Order Placed',
+          payment_method VARCHAR(50) DEFAULT 'COD',
+          payment_status VARCHAR(50) DEFAULT 'Pending',
+          pidx VARCHAR(255) UNIQUE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+     `;
 
   // Order Items Table (Snapshot of product data at time of purchase)
   const orderItemsTable = `
@@ -157,6 +160,30 @@ db.connect((err) => {
       console.error(" Failed to create orders table:", err.message);
     } else {
       console.log("orders table ready");
+
+      // Migration: Add payment_method, payment_status, and pidx if missing
+      db.query("SHOW COLUMNS FROM orders LIKE 'payment_method'", (err, results) => {
+        if (!err && results.length === 0) {
+          db.query("ALTER TABLE orders ADD COLUMN payment_method VARCHAR(50) DEFAULT 'COD'", (alterErr) => {
+            if (alterErr) console.error(" Migration error (payment_method):", alterErr.message);
+          });
+        }
+      });
+      db.query("SHOW COLUMNS FROM orders LIKE 'payment_status'", (err, results) => {
+        if (!err && results.length === 0) {
+          db.query("ALTER TABLE orders ADD COLUMN payment_status VARCHAR(50) DEFAULT 'Pending'", (alterErr) => {
+            if (alterErr) console.error(" Migration error (payment_status):", alterErr.message);
+          });
+        }
+      });
+      db.query("SHOW COLUMNS FROM orders LIKE 'pidx'", (err, results) => {
+        if (!err && results.length === 0) {
+          db.query("ALTER TABLE orders ADD COLUMN pidx VARCHAR(255) UNIQUE", (alterErr) => {
+            if (alterErr) console.error(" Migration error (pidx):", alterErr.message);
+          });
+        }
+      });
+
       // Create sub-items table ONLY after parent orders table successfully exists
       db.query(orderItemsTable, (err2) => {
         if (err2) console.error(" Failed to create order_items table:", err2.message);
@@ -238,7 +265,7 @@ db.connect((err) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
-  
+
   // ARTICLES TABLE
   const articlesTable = `
     CREATE TABLE IF NOT EXISTS articles (
@@ -261,6 +288,17 @@ db.connect((err) => {
       message TEXT,
       type ENUM('Order', 'Query', 'Response', 'Demand', 'System') NOT NULL,
       is_read TINYINT(1) DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  
+  // DELIVERY VEHICLES TABLE (Inventory)
+  const deliveryVehiclesTable = `
+    CREATE TABLE IF NOT EXISTS delivery_vehicles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      plate_number VARCHAR(20) NOT NULL UNIQUE,
+      vehicle_type VARCHAR(100) NOT NULL,
+      status ENUM('Available', 'Assigned') DEFAULT 'Available',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -316,6 +354,25 @@ db.connect((err) => {
       console.error(" Failed to create notifications table:", err.message);
     } else {
       console.log(" notifications table ready");
+    }
+  });
+
+  // Create delivery_vehicles table
+  db.query(deliveryVehiclesTable, (err) => {
+    if (err) {
+      console.error(" Failed to create delivery_vehicles table:", err.message);
+    } else {
+      console.log(" delivery_vehicles table ready");
+    }
+  });
+  
+  // Migration: Add vehicle_id to orders
+  db.query("SHOW COLUMNS FROM orders LIKE 'vehicle_id'", (err, results) => {
+    if (!err && results.length === 0) {
+      db.query("ALTER TABLE orders ADD COLUMN vehicle_id INT", (alterErr) => {
+        if (alterErr) console.error(" Migration error (vehicle_id):", alterErr.message);
+        else console.log(" Added vehicle_id column to orders table");
+      });
     }
   });
 

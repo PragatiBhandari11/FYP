@@ -21,7 +21,8 @@ import {
   ChevronRight,
   RefreshCcw,
   Calendar,
-  Handshake
+  Handshake,
+  Truck
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -31,7 +32,8 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalProducts: 0,
     totalOrders: 0,
-    totalEarnings: 0
+    totalEarnings: 0,
+    totalVehicles: 0
   });
 
   // Data states
@@ -40,6 +42,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [collabs, setCollabs] = useState([]);
   const [cropCalendar, setCropCalendar] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // New crop form
@@ -49,6 +52,12 @@ export default function AdminDashboard() {
     season_type: "Seasonal",
     best_months: "",
     description: ""
+  });
+
+  // New vehicle form
+  const [newVehicle, setNewVehicle] = useState({
+    plate_number: "",
+    vehicle_type: "Pickup Van"
   });
 
   // New collab form
@@ -74,12 +83,13 @@ export default function AdminDashboard() {
     setIsRefreshing(true);
     try {
       // Fetch stats
-      const [usersRes, productsRes, ordersRes, collabsRes, calendarRes] = await Promise.all([
+      const [usersRes, productsRes, ordersRes, collabsRes, calendarRes, vehiclesRes] = await Promise.all([
         fetch("http://localhost:5000/api/admin/users").then(r => r.json()),
         fetch("http://localhost:5000/api/admin/products").then(r => r.json()),
         fetch("http://localhost:5000/api/admin/orders").then(r => r.json()),
         fetch("http://localhost:5000/api/collaborations").then(r => r.json()),
-        fetch("http://localhost:5000/api/calendar/crops").then(r => r.json())
+        fetch("http://localhost:5000/api/calendar/crops").then(r => r.json()),
+        fetch("http://localhost:5000/api/admin/vehicles").then(r => r.json())
       ]);
 
       setUsers(usersRes || []);
@@ -87,12 +97,10 @@ export default function AdminDashboard() {
       setOrders(ordersRes || []);
       setCollabs(collabsRes || []);
       setCropCalendar(calendarRes || []);
+      setVehicles(vehiclesRes || []);
 
       const earnings = (ordersRes || []).reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
       setStats({
-        totalUsers: (usersRes || []).length,
-        totalProducts: (productsRes || []).length,
-        totalOrders: (ordersRes || []).length,
         totalEarnings: earnings
       });
     } catch (err) {
@@ -175,6 +183,39 @@ export default function AdminDashboard() {
       fetch(`http://localhost:5000/api/calendar/crops/${id}`, { method: "DELETE" })
         .then(() => fetchAllData());
     }
+  };
+
+  const handleVehicleSubmit = (e) => {
+    e.preventDefault();
+    fetch("http://localhost:5000/api/admin/vehicles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newVehicle)
+    }).then(() => {
+      fetchAllData();
+      setNewVehicle({ plate_number: "", vehicle_type: "Pickup Van" });
+      alert("Vehicle added to fleet!");
+    });
+  };
+
+  const deleteVehicle = (id) => {
+    if (window.confirm("Remove this vehicle from fleet?")) {
+      fetch(`http://localhost:5000/api/admin/vehicles/${id}`, { method: "DELETE" })
+        .then(() => fetchAllData());
+    }
+  };
+
+  const assignVehicleToOrder = (orderId, vehicleId) => {
+    if (!vehicleId) return;
+    fetch(`http://localhost:5000/api/admin/orders/${orderId}/assign-vehicle`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId })
+    }).then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        fetchAllData();
+      });
   };
 
   return (
@@ -354,23 +395,28 @@ export default function AdminDashboard() {
             <div className="stats-grid">
               <div className="stat-card" onClick={() => setActiveTab("users")} style={{cursor: 'pointer'}}>
                 <span className="label">Total Users</span>
-                <span className="value">{stats.totalUsers}</span>
+                <span className="value">{users.length}</span>
                 <div className="icon-box" style={{background: '#eff6ff', color: '#3b82f6'}}><Users size={18} /></div>
               </div>
               <div className="stat-card" onClick={() => setActiveTab("inventory")} style={{cursor: 'pointer'}}>
-                <span className="label">Inventory</span>
-                <span className="value">{stats.totalProducts}</span>
+                <span className="label">Store Inventory</span>
+                <span className="value">{products.length}</span>
                 <div className="icon-box" style={{background: '#f0fdf4', color: '#10b981'}}><Package size={18} /></div>
               </div>
               <div className="stat-card" onClick={() => setActiveTab("orders")} style={{cursor: 'pointer'}}>
                 <span className="label">Total Orders</span>
-                <span className="value">{stats.totalOrders}</span>
+                <span className="value">{orders.length}</span>
                 <div className="icon-box" style={{background: '#fffbeb', color: '#f59e0b'}}><ShoppingBag size={18} /></div>
               </div>
               <div className="stat-card">
                 <span className="label">Revenue</span>
                 <span className="value">Rs {stats.totalEarnings.toLocaleString()}</span>
                 <div className="icon-box" style={{background: '#faf5ff', color: '#8b5cf6'}}><TrendingUp size={18} /></div>
+              </div>
+              <div className="stat-card" onClick={() => setActiveTab("logistics")} style={{cursor: 'pointer'}}>
+                <span className="label">Delivery Vans</span>
+                <span className="value">{vehicles.length}</span>
+                <div className="icon-box" style={{background: '#fef2f2', color: '#ef4444'}}><Truck size={18} /></div>
               </div>
             </div>
 
@@ -450,6 +496,72 @@ export default function AdminDashboard() {
                       <option value="Delivered">Delivered</option>
                     </select>
                   </div>
+                  
+                  {/* Vehicle Assignment UI */}
+                  <div style={{width: '100%', borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '4px'}}>
+                    {o.vehicle_id ? (
+                      <p style={{fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px'}}>
+                        <Truck size={12} /> Assigned: {o.plate_number} ({o.vehicle_type})
+                      </p>
+                    ) : (
+                      <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                        <Truck size={14} color="#64748b" />
+                        <select 
+                          onChange={(e) => assignVehicleToOrder(o.id, e.target.value)}
+                          style={{width: 'auto', padding: '4px', fontSize: '11px', margin: 0, flex: 1}}
+                          defaultValue=""
+                        >
+                          <option value="" disabled>Assign Delivery Van...</option>
+                          {vehicles.filter(v => v.status === 'Available').map(v => (
+                            <option key={v.id} value={v.id}>{v.plate_number} - {v.vehicle_type}</option>
+                          ))}
+                          {vehicles.filter(v => v.status === 'Available').length === 0 && (
+                            <option disabled>No Vans Available</option>
+                          )}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        )}
+
+        {activeTab === "logistics" && (
+          <div className="tab-content">
+            <h2 style={{fontSize: '18px', marginBottom: '16px'}}>Delivery Fleet (Vans)</h2>
+            <div style={{background: 'white', padding: '16px', borderRadius: '12px', marginBottom: '16px'}}>
+              <h3 style={{fontSize: '14px', marginTop: 0}}>Register New Van</h3>
+              <form onSubmit={handleVehicleSubmit}>
+                <input 
+                  type="text" 
+                  placeholder="Plate Number (e.g. BA-1234)" 
+                  value={newVehicle.plate_number} 
+                  onChange={e => setNewVehicle({...newVehicle, plate_number: e.target.value})} 
+                  required 
+                />
+                <select 
+                  value={newVehicle.vehicle_type} 
+                  onChange={e => setNewVehicle({...newVehicle, vehicle_type: e.target.value})}
+                >
+                  <option value="Pickup Van">Pickup Van</option>
+                  <option value="Mini Truck">Mini Truck</option>
+                  <option value="Cooling Truck">Cooling Truck (Recommended for Veggies)</option>
+                  <option value="Tractor">Tractor</option>
+                </select>
+                <button type="submit" style={{width: '100%', padding: '12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold'}}>Add to Fleet</button>
+              </form>
+            </div>
+
+            {vehicles.length === 0 ? <div className="empty-state">No vehicles in fleet</div> : 
+              vehicles.map(v => (
+                <div className="list-card" key={v.id}>
+                  <div className="list-info">
+                    <h4>{v.plate_number} <span className={`status-badge ${v.status === 'Available' ? 'approved' : 'pending'}`}>{v.status}</span></h4>
+                    <p>{v.vehicle_type}</p>
+                  </div>
+                  <button className="btn-icon" style={{background: '#fee2e2', color: '#ef4444'}} onClick={() => deleteVehicle(v.id)}><Trash2 size={18} /></button>
                 </div>
               ))
             }
@@ -554,6 +666,10 @@ export default function AdminDashboard() {
         <div className={`nav-link ${activeTab === "collabs" ? "active" : ""}`} onClick={() => setActiveTab("collabs")}>
           <Handshake size={22} />
           <span>Collab</span>
+        </div>
+        <div className={`nav-link ${activeTab === "logistics" ? "active" : ""}`} onClick={() => setActiveTab("logistics")}>
+          <Truck size={22} />
+          <span>Logistics</span>
         </div>
         <div className={`nav-link ${activeTab === "more" ? "active" : ""}`} onClick={() => setActiveTab("more")}>
           <Settings size={22} />

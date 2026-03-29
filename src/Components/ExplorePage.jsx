@@ -6,7 +6,7 @@ export default function ExplorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = searchParams.get("category") || "All";
   const initialSearch = searchParams.get("search") || "";
-  
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(initialFilter);
@@ -18,7 +18,7 @@ export default function ExplorePage() {
       alert("Please login to add items to cart.");
       return;
     }
-    
+
     try {
       const response = await fetch("http://localhost:5000/api/cart/add", {
         method: "POST",
@@ -188,105 +188,85 @@ export default function ExplorePage() {
       <div className="app">
         <div className="content-scroll">
           {/* Header */}
-        <div className="header">
-          <h2>Explore Products</h2>
-          <div className="search-bar">
-            🔍
-            <input 
-              placeholder="Search products, farmers..." 
-              value={searchQuery}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSearchQuery(val);
-                const newParams = new URLSearchParams(searchParams);
-                if (val) newParams.set("search", val);
-                else newParams.delete("search");
-                setSearchParams(newParams);
-              }}
-            />
-            ⚙️
+          <div className="header">
+            <h2>Explore Products</h2>
+            <div className="search-bar">
+              🔍
+              <input
+                placeholder="Search products, farmers..."
+                value={searchQuery}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchQuery(val);
+                  const newParams = new URLSearchParams(searchParams);
+                  if (val) newParams.set("search", val);
+                  else newParams.delete("search");
+                  setSearchParams(newParams);
+                }}
+              />
+              ⚙️
+            </div>
           </div>
-        </div>
 
-        {/* Filters */}
-        <section>
-          <div className="filters">
-            <div 
-              className={`chip ${activeFilter === "All" ? "active" : ""}`}
-              onClick={() => { 
-                setActiveFilter("All"); 
-                const newParams = new URLSearchParams(searchParams);
-                newParams.delete("category");
-                setSearchParams(newParams);
-              }}
-            >All</div>
-            <div 
-              className={`chip ${activeFilter === "vegetable" ? "active" : ""}`}
-              onClick={() => { 
-                setActiveFilter("vegetable"); 
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("category", "vegetable");
-                setSearchParams(newParams); 
-              }}
-            >Vegetables</div>
-            <div 
-              className={`chip ${activeFilter === "fruits" ? "active" : ""}`}
-              onClick={() => { 
-                setActiveFilter("fruits"); 
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("category", "fruits");
-                setSearchParams(newParams); 
-              }}
-            >Fruits</div>
-            <div 
-              className={`chip ${activeFilter === "dairy" ? "active" : ""}`}
-              onClick={() => { 
-                setActiveFilter("dairy"); 
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("category", "dairy");
-                setSearchParams(newParams); 
-              }}
-            >Dairy</div>
-             <div 
-              className={`chip ${activeFilter === "plant" ? "active" : ""}`}
-              onClick={() => { 
-                setActiveFilter("plant"); 
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("category", "plant");
-                setSearchParams(newParams); 
-              }}
-            >Plants</div>
+          {/* Filters */}
+          <section>
+            <div className="filters">
+              <div 
+                className={`chip ${activeFilter === "All" ? "active" : ""}`}
+                onClick={() => { 
+                  setActiveFilter("All"); 
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete("category");
+                  setSearchParams(newParams);
+                }}
+              >All</div>
+              {["Vegetable", "Fruits", "Dairy", "Plant"].map(cat => (
+              <div 
+                key={cat}
+                className={`chip ${activeFilter.toLowerCase() === cat.toLowerCase() ? "active" : ""}`}
+                onClick={() => { 
+                  setActiveFilter(cat); 
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set("category", cat.toLowerCase());
+                  setSearchParams(newParams); 
+                }}
+              >{cat}{cat === "Vegetable" ? "s" : ""}</div>
+            ))}
           </div>
+          </section>
 
           {/* Products */}
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "20px" }}>Loading products...</div>
-          ) : (
-            <div className="grid">
-              {products
-                .filter(p => activeFilter === "All" ? true : p.category === activeFilter)
-                .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                .length === 0 ? (
-                <div style={{ gridColumn: "span 2", textAlign: "center", color: "#666" }}>
-                  No products found.
-                </div>
-              ) : (
-                products
-                  .filter(p => activeFilter === "All" ? true : p.category === activeFilter)
-                  .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map((p) => (
+          <section>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "20px" }}>Loading products...</div>
+            ) : (
+              <div className="grid">
+                {(() => {
+                  const filtered = products
+                    .filter(p => activeFilter === "All" ? true : p.category?.toLowerCase() === activeFilter.toLowerCase())
+                    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                  
+                  if (filtered.length === 0) {
+                    return (
+                      <div style={{ gridColumn: "span 2", textAlign: "center", color: "#666", padding: "40px" }}>
+                        No products found for this search/filter.
+                      </div>
+                    );
+                  }
+
+                  return filtered.map((p) => (
                     <div style={{ position: "relative" }} key={p.id}>
                       <ProductCard
                         title={p.name}
                         price={`Rs${p.price}`}
                         rating="⭐ 4.8"
                         img={
-                           p.image_url
+                          p.image_url
                             ? `http://localhost:5000${p.image_url}`
                             : "https://images.unsplash.com/photo-1592924357228-91a4daadcfea"
                         }
                       />
-                      <button 
+                      <button
                         onClick={() => handleAddToCart(p.id)}
                         style={{
                           position: "absolute",
@@ -307,11 +287,11 @@ export default function ExplorePage() {
                         }}
                       >+</button>
                     </div>
-                ))
-              )}
-            </div>
-          )}
-        </section>
+                  ));
+                })()}
+              </div>
+            )}
+          </section>
         </div>
 
         {/* Bottom Navigation */}

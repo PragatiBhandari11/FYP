@@ -231,9 +231,9 @@ export default function FarmerOrdersPage() {
                     <div className="total-price">Rs{order.price_at_purchase * order.quantity}</div>
                   </div>
                 </div>
-                <div className="order-footer">
-                   <div className={`status-badge status-${order.status.replace(/\s+/g, '')}`}>{order.status}</div>
-                   <div style={{display: "flex", gap: "8px"}}>
+                <div className="order-footer" style={{flexDirection: "column", alignItems: "flex-start", gap: "10px"}}>
+                   <div style={{display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center"}}>
+                     <div className={`status-badge status-${order.status.replace(/\s+/g, '')}`}>{order.status}</div>
                      <select 
                        defaultValue={order.status}
                        onChange={(e) => updateOrderStatus(order.order_id, e.target.value)}
@@ -253,6 +253,24 @@ export default function FarmerOrdersPage() {
                        <option value="Cancelled">Cancelled</option>
                      </select>
                    </div>
+
+                   {order.plate_number && ["Packing", "Out for Delivery", "Delivered"].includes(order.status) && (
+                     <div style={{
+                       width: "100%", 
+                       background: "#f0fdf4", 
+                       padding: "8px", 
+                       borderRadius: "8px", 
+                       fontSize: "12px", 
+                       color: "#166534",
+                       display: "flex",
+                       alignItems: "center",
+                       gap: "8px",
+                       border: "1px solid #dcfce7"
+                     }}>
+                       <span>🚚</span>
+                       <span><strong>Assigned Vehicle:</strong> {order.plate_number} ({order.vehicle_type})</span>
+                     </div>
+                   )}
                 </div>
               </div>
             ))
