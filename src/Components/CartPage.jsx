@@ -8,6 +8,12 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [payment, setPayment] = useState("khalti");
   const [checkingOut, setCheckingOut] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
 
   const buyerEmail = localStorage.getItem("userEmail");
 
@@ -46,7 +52,10 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return alert("Your cart is empty!");
+    if (cart.length === 0) {
+      showToast("Your cart is empty!", "error");
+      return;
+    }
     setCheckingOut(true);
 
     if (payment === "khalti") {
@@ -64,14 +73,14 @@ export default function CartPage() {
         const data = await response.json();
 
         if (response.ok && data.payment_url) {
-          // ✅ FIX #4: Direct redirect to Khalti — simpler & more reliable than QR modal
+          // ✅ FIX #4: Direct redirect to Khalti
           window.location.href = data.payment_url;
         } else {
-          alert(data.message || "Khalti initiation failed. Please try again.");
+          showToast(data.message || "Khalti initiation failed.", "error");
         }
       } catch (error) {
         console.error("Khalti initiation error:", error);
-        alert("Network error. Please check your connection.");
+        showToast("Network error. Please try again.", "error");
       } finally {
         setCheckingOut(false);
       }
@@ -91,11 +100,11 @@ export default function CartPage() {
           navigate("/buyer-orders");
         } else {
           const err = await response.json();
-          alert(err.message || "Checkout failed");
+          showToast(err.message || "Checkout failed", "error");
         }
       } catch (error) {
         console.error("Checkout error:", error);
-        alert("Network error. Please check your connection.");
+        showToast("Network error. Please try again.", "error");
       } finally {
         setCheckingOut(false);
       }
@@ -271,6 +280,40 @@ export default function CartPage() {
 
         .nav-item.active { color: #22c55e; }
         .nav-item .icon { font-size: 20px; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="app">
@@ -375,6 +418,15 @@ export default function CartPage() {
             <span>Profile</span>
           </div>
         </div>
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

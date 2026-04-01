@@ -29,6 +29,8 @@ import ArticleForm from "./Components/ArticleForm";
 import ArticleDetail from "./Components/ArticleDetail";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailure from "./Components/PaymentFailure";
+import ChatPage from "./Components/ChatPage";
+import ExpertChats from "./Components/ExpertChats";
 
 
 
@@ -60,6 +62,7 @@ function App() {
         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/expert-disease-reports" element={<ExpertDiseaseReports />} />
+        <Route path="/expert-chats" element={<ExpertChats />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/my-farm" element={<MyProducts />} />
         <Route path="/buyer-cart" element={<CartPage />} />
@@ -72,6 +75,7 @@ function App() {
         <Route path="/buyer-orders" element={<OrdersPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failure" element={<PaymentFailure />} />
+        <Route path="/chat/:type/:id" element={<ChatPage />} />
 
 
         {/* Buyer Explore */}

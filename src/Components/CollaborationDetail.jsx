@@ -337,38 +337,31 @@ export default function CollaborationDetail() {
           </div>
         </div>
 
-        {/* Chat section */}
-        <div className="chat-section">
-          <div className="chat-header">
-            <div className="chat-dot" />
-            Chat with {collab.name}
-          </div>
-
-          <div className="messages-area">
-            {messages.map((msg, i) => (
-              <div key={i} className={`msg-row ${msg.sender === "me" ? "me" : "them"}`}>
-                <div className="msg-avatar">
-                  {msg.sender === "me" ? "👤" : "🏨"}
-                </div>
-                <div>
-                  <div className="msg-bubble">{msg.text}</div>
-                  <div className="msg-time">{msg.time}</div>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="chat-input-bar">
-            <input
-              className="chat-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
-              placeholder="Type a message..."
-            />
-            <button className="send-btn" onClick={sendMessage}>➤</button>
-          </div>
+        {/* Chat Section */}
+        <div className="chat-section" style={{ padding: "20px", background: "#fff", borderTop: "1px solid #eee", textAlign: "center" }}>
+          <p style={{ fontSize: "14px", color: "#666", marginBottom: "15px" }}>
+            Want to discuss a partnership or stock availability? 
+          </p>
+          <button 
+            onClick={() => navigate(`/collaboration-chat/${id}`)}
+            style={{
+              width: "100%",
+              padding: "14px",
+              background: "#16a34a",
+              color: "white",
+              border: "none",
+              borderRadius: "12px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              fontSize: "15px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px"
+            }}
+          >
+            💬 Open Chat History
+          </button>
         </div>
       </div>
     </>

@@ -6,6 +6,12 @@ export default function ExpertDiseaseReports() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState({}); // Track responses per report ID
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
 
   useEffect(() => {
     fetch("http://localhost:5000/api/disease/reports")
@@ -19,7 +25,10 @@ export default function ExpertDiseaseReports() {
 
   const handleResponseSubmit = async (id) => {
     const expertText = response[id];
-    if (!expertText) return alert("Please type a response first.");
+    if (!expertText) {
+      showToast("Please type a response first.", "error");
+      return;
+    }
 
     try {
       const res = await fetch(`http://localhost:5000/api/disease/respond/${id}`, {
@@ -28,9 +37,11 @@ export default function ExpertDiseaseReports() {
         body: JSON.stringify({ response: expertText })
       });
       if (res.ok) {
-        alert("Advice sent successfully! ✅");
+        showToast("Advice sent successfully! ✅");
         // Update local state
         setReports(reports.map(r => r.id === id ? { ...r, status: 'Responded', expert_response: expertText } : r));
+      } else {
+        showToast("Failed to send advice.", "error");
       }
     } catch (err) {
       console.error(err);
@@ -59,6 +70,40 @@ export default function ExpertDiseaseReports() {
         .response-area { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; margin-bottom: 10px; min-height: 60px; }
         .submit-btn { width: 100%; padding: 10px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .expert-advice { background: #e8f5e9; padding: 10px; border-radius: 8px; border-left: 4px solid #2e7d32; font-size: 13px; color: #1b5e20; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="page">
@@ -95,6 +140,15 @@ export default function ExpertDiseaseReports() {
           ))
         )}
       </div>
+
+      {toast.show && (
+        <div className="toast-container">
+          <div className={`toast-content toast-${toast.type}`}>
+            <span>{toast.type === "success" ? "✅" : "❌"}</span>
+            {toast.message}
+          </div>
+        </div>
+      )}
     </>
   );
 }

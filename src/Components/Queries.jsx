@@ -107,6 +107,12 @@ const Queries = () => {
                     >
                       Reply
                     </button>
+                    <button 
+                      style={{...styles.btnReply, background: "#1e3a8a"}} // Navy blue for chat
+                      onClick={() => navigate(`/chat/user/${q.farmer_email}`)}
+                    >
+                      💬 Chat
+                    </button>
                   </div>
                 </div>
               </div>

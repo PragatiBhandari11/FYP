@@ -13,6 +13,12 @@ const ArticleForm = () => {
   });
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -76,8 +82,10 @@ const ArticleForm = () => {
       });
 
       if (response.ok) {
-        alert(isEdit ? "Article updated!" : "Article published!");
-        navigate("/knowledge");
+        showToast(isEdit ? "Article updated! ✅" : "Article published! 📝");
+        setTimeout(() => navigate("/knowledge"), 2000);
+      } else {
+        showToast("Error saving article.", "error");
       }
     } catch (error) {
       console.error("Error submitting article:", error);
@@ -152,6 +160,15 @@ const ArticleForm = () => {
           {loading ? "Processing..." : isEdit ? "Update Article" : "Publish Article"}
         </button>
       </form>
+
+      {toast.show && (
+        <div style={styles.toastContainer}>
+          <div style={{...styles.toastContent, ...styles[`toast${toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}`]}}>
+            <span>{toast.type === "success" ? "✅" : "❌"}</span>
+            {toast.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -238,6 +255,32 @@ const styles = {
     cursor: "pointer",
     boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
   },
+  toastContainer: {
+    position: "fixed",
+    top: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 10000,
+    width: "90%",
+    maxWidth: "320px",
+  },
+  toastContent: {
+    background: "rgba(255, 255, 255, 0.9)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    fontWeight: "600",
+    fontSize: "14px",
+    animation: "slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+  },
+  toastSuccess: { color: "#16a34a", borderLeft: "4px solid #16a34a" },
+  toastError: { color: "#ef4444", borderLeft: "4px solid #ef4444" },
 };
 
 export default ArticleForm;

@@ -17,6 +17,7 @@ const diseaseRoutes = require("./routes/disease");
 const calendarRoutes = require("./routes/calendar");
 const articleRoutes = require("./routes/articles");
 const notificationRoutes = require("./routes/notification");
+const chatRoutes = require("./routes/chat");
 
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/disease', diseaseRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/notification', notificationRoutes);
+app.use('/api/chat', chatRoutes);
 
 
 

@@ -112,7 +112,7 @@ router.post("/initiate-khalti", (req, res) => {
 
             const payload = {
               // ✅ FIX: Make sure this matches your React Router path exactly
-              "return_url": "http://localhost:5173/payment/success",
+              "return_url": "http://localhost:5173/payment-success",
               "website_url": "http://localhost:5173",
               "amount": amountInPaisa,
               "purchase_order_id": orderNumber,

@@ -180,7 +180,27 @@ export default function FarmerExpertPage() {
                   <div className="expert-info">
                     <h4 className="expert-name">{expert.full_name}</h4>
                     <p className="expert-meta">📍 {expert.city || "Local Expert"}</p>
-                    <p className="expert-phone">📞 {expert.phone || "Consult now"}</p>
+                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px"}}>
+                      <p className="expert-phone">📞 {expert.phone || "Consult now"}</p>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/chat/user/${expert.email}`);
+                        }}
+                        style={{
+                          background: "#f0fdf4",
+                          border: "1px solid #16a34a",
+                          color: "#16a34a",
+                          padding: "4px 10px",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          cursor: "pointer"
+                        }}
+                      >
+                        💬 Chat
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

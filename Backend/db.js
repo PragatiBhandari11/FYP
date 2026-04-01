@@ -122,6 +122,17 @@ db.connect((err) => {
           });
         }
       });
+
+      // Migration: Add profile_image if it doesn't exist
+      db.query("SHOW COLUMNS FROM users LIKE 'profile_image'", (err, results) => {
+        if (err) return console.error(" Column check error (profile_image):", err.message);
+        if (results.length === 0) {
+          db.query("ALTER TABLE users ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL", (alterErr) => {
+            if (alterErr) console.error(" Migration error (profile_image):", alterErr.message);
+            else console.log(" Added profile_image column to users table");
+          });
+        }
+      });
     }
   });
 
@@ -363,6 +374,52 @@ db.connect((err) => {
       console.error(" Failed to create delivery_vehicles table:", err.message);
     } else {
       console.log(" delivery_vehicles table ready");
+    }
+  });
+
+  // MESSAGES TABLE
+  const messagesTable = `
+    CREATE TABLE IF NOT EXISTS messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      sender_email VARCHAR(100) NOT NULL,
+      receiver_id INT DEFAULT NULL,
+      receiver_email VARCHAR(100) DEFAULT NULL,
+      message_text TEXT,
+      image_url VARCHAR(255) DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  // Create messages table
+  db.query(messagesTable, (err) => {
+    if (err) {
+      console.error(" Failed to create messages table:", err.message);
+    } else {
+      console.log(" messages table ready");
+      
+      // Migration: Change receiver_id to NULLable
+      db.query("ALTER TABLE messages MODIFY COLUMN receiver_id INT DEFAULT NULL", (alterErr) => {
+        if (alterErr) console.warn(" Migration warning (receiver_id NULL):", alterErr.message);
+      });
+
+      // Migration: Add receiver_email to messages
+      db.query("SHOW COLUMNS FROM messages LIKE 'receiver_email'", (err, results) => {
+        if (!err && results.length === 0) {
+          db.query("ALTER TABLE messages ADD COLUMN receiver_email VARCHAR(100) DEFAULT NULL", (alterErr) => {
+            if (alterErr) console.error(" Migration error (receiver_email):", alterErr.message);
+            else console.log(" Added receiver_email to messages table");
+          });
+        }
+      });
+      // Migration: Add image_url to messages
+      db.query("SHOW COLUMNS FROM messages LIKE 'image_url'", (err, results) => {
+        if (!err && results.length === 0) {
+          db.query("ALTER TABLE messages ADD COLUMN image_url VARCHAR(255) DEFAULT NULL", (alterErr) => {
+            if (alterErr) console.error(" Migration error (image_url):", alterErr.message);
+            else console.log(" Added image_url to messages table");
+          });
+        }
+      });
     }
   });
   

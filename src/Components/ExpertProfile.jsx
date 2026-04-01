@@ -1,29 +1,154 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Camera, Edit3, Lock, LogOut, Check, X, User, Phone, MapPin, Globe, GraduationCap } from "lucide-react";
 
 export default function ExpertProfile() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+
+  // Profile data and states
   const [userData, setUserData] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  useEffect(() => {
-    const email = localStorage.getItem("userEmail");
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
+
+  // Edit form states
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    phone: "",
+    country: "",
+    city: ""
+  });
+
+  // Password form states
+  const [passForm, setPassForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  const email = localStorage.getItem("userEmail");
+
+  const fetchUserData = () => {
     if (!email) {
       setError("Please log in to view your profile.");
       return;
     }
 
+    setLoading(true);
     fetch(`http://localhost:5000/api/user/${email}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch user details");
         return res.json();
       })
-      .then((data) => setUserData(data))
+      .then((data) => {
+        setUserData(data);
+        setEditForm({
+          fullName: data.full_name,
+          phone: data.phone || "",
+          country: data.country || "",
+          city: data.city || ""
+        });
+        setLoading(false);
+      })
       .catch((err) => {
         console.error(err);
         setError("Could not connect to the server.");
+        setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchUserData();
   }, []);
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, ...editForm })
+      });
+      if (response.ok) {
+        setIsEditing(false);
+        fetchUserData();
+        showToast("Profile updated successfully! ✨");
+      } else {
+        showToast("Failed to update profile.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("profileImage", file);
+    formData.append("email", email);
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/profile-image", {
+        method: "POST",
+        body: formData
+      });
+      if (response.ok) {
+        fetchUserData();
+        showToast("Photo uploaded! 📸");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passForm.newPassword !== passForm.confirmPassword) {
+      showToast("New passwords do not match!", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/change-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          currentPassword: passForm.currentPassword,
+          newPassword: passForm.newPassword
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || "Password updated! ✨");
+        setPassForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setShowPasswordSection(false);
+      } else {
+        showToast(data.message || "Failed to change password.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -33,62 +158,295 @@ export default function ExpertProfile() {
   return (
     <>
       <style>{`
-        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f0f7f0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        body { margin: 0; font-family: 'Outfit', sans-serif; background: #fdfdfd; }
+        
         .profile-container { 
-          max-width: 420px;
+          max-width: 390px;
           margin: auto;
-          background: #ffffff;
+          background: #fff;
           min-height: 100vh;
           display: flex;
           flex-direction: column;
-          padding: 20px;
-          box-sizing: border-box;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+          position: relative;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.1);
         }
-        .back-btn { background: none; border: none; font-size: 16px; color: #3a8a3a; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
-        .profile-header { text-align: center; margin-bottom: 30px; }
-        .avatar { width: 90px; height: 90px; background: #3a8a3a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: bold; margin: 0 auto 15px; }
-        .profile-name { font-size: 24px; color: #333; margin: 0; }
-        .profile-role { color: #3a8a3a; font-size: 14px; font-weight: bold; margin-top: 5px; }
-        
-        .info-section { background: #f9fdf9; border-radius: 15px; padding: 20px; margin-bottom: 25px; border: 1px solid #e6f0e6; }
-        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #edf5ed; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { color: #666; font-size: 14px; }
-        .info-value { color: #222; font-size: 14px; font-weight: 600; }
-        
-        .logout-btn { width: 100%; padding: 14px; background: #dc3545; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .logout-btn:hover { background: #c82333; }
-        .error { text-align: center; color: #dc3545; padding: 20px; }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; maxWidth: 420px; backgroundColor: "white"; borderTop: "1px solid #ddd"; display: "flex"; justifyContent: "space-around"; paddingTop: 8; paddingBottom: 8; boxShadow: "0 -2px 6px rgba(0,0,0,0.05)"; zIndex: 1000; }
-        /* Reusing styles from dashboard */
+        .profile-header {
+          background: linear-gradient(135deg, #3a8a3a 0%, #166534 100%);
+          padding: 40px 20px 60px;
+          text-align: center;
+          color: white;
+          position: relative;
+        }
+
+        .back-btn { 
+          position: absolute; top: 20px; left: 20px;
+          background: rgba(255,255,255,0.15); border: none; padding: 10px;
+          border-radius: 12px; color: white; cursor: pointer; backdrop-filter: blur(8px);
+        }
+
+        .avatar-container {
+          position: relative;
+          width: 110px;
+          height: 110px;
+          margin: 0 auto 15px;
+        }
+
+        .avatar { 
+          width: 100%; height: 100%; 
+          border: 4px solid rgba(255,255,255,0.3);
+          border-radius: 50%; object-fit: cover;
+          background: #166534; display: flex; align-items: center; justify-content: center;
+          font-size: 40px; font-weight: bold; overflow: hidden;
+        }
+
+        .upload-badge {
+          position: absolute; bottom: 0; right: 0;
+          background: #fff; color: #3a8a3a; padding: 8px;
+          border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+          transition: transform 0.2s;
+        }
+        .upload-badge:active { transform: scale(0.9); }
+
+        .profile-content {
+          margin-top: -30px;
+          background: #fff;
+          border-radius: 32px 32px 0 0;
+          padding: 30px 20px;
+          flex: 1;
+        }
+
+        .expert-badge { 
+          background: #f0f7f0; border-radius: 16px; padding: 16px; margin-bottom: 25px; 
+          display: flex; align-items: center; justify-content: space-between; border: 1px solid #e6f0e6;
+        }
+        .status-badge { background: #3a8a3a; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+
+        .section-title { font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+        
+        .info-card { background: #f8fafc; border-radius: 20px; padding: 8px 16px; margin-bottom: 25px; border: 1px solid #f1f5f9; }
+        .info-item { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid #f1f5f9; }
+        .info-item:last-child { border-bottom: none; }
+        .info-icon { background: #fff; padding: 10px; border-radius: 12px; color: #3a8a3a; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .info-text { flex: 1; }
+        .info-label { display: block; font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 2px; }
+        .info-value { display: block; font-size: 15px; color: #334155; font-weight: 600; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; }
+        .form-input { 
+          width: 100%; padding: 14px; border-radius: 14px; border: 1px solid #e2e8f0; 
+          font-size: 15px; background: #f8fafc; outline: none; transition: 0.2s;
+        }
+        .form-input:focus { border-color: #3a8a3a; background: #fff; box-shadow: 0 0 0 4px rgba(58, 138, 58, 0.1); }
+
+        .btn { 
+          width: 100%; padding: 16px; border-radius: 16px; border: none; 
+          font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s;
+          display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-primary { background: #3a8a3a; color: white; }
+        .btn-outline { background: #fff; border: 2px solid #e2e8f0; color: #64748b; margin-top: 10px; }
+        .btn-danger { background: #fef2f2; color: #ef4444; margin-top: 20px; }
+        
+        .bottom-nav {
+          border-top: 1px solid #f1f5f9; display: flex; justify-content: space-around;
+          padding: 12px 0 20px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #94a3b8; cursor: pointer; }
+        .nav-item.active { color: #3a8a3a; font-weight: 700; }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="profile-container">
-        <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
+        {loading && <div style={{position: "absolute", top:0, left:0, right:0, height: "4px", background: "#3a8a3a", zIndex: 100}} />}
 
-        {error ? (
-          <div className="error">{error}</div>
-        ) : !userData ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>Loading profile...</div>
-        ) : (
-          <div>
-            <div className="profile-header">
-              <div className="avatar">{userData.full_name.charAt(0)}</div>
-              <h2 className="profile-name">{userData.full_name}</h2>
-              <div className="profile-role">Registered Expert</div>
+        <div className="profile-header">
+          <button className="back-btn" onClick={() => navigate(-1)}><X size={20} /></button>
+          <div className="avatar-container">
+            <div className="avatar">
+              {userData?.profile_image ? (
+                <img src={`http://localhost:5000${userData.profile_image}`} alt="Profile" style={{width: "100%", height: "100%", objectFit: "cover"}} />
+              ) : (
+                userData?.full_name?.charAt(0).toUpperCase()
+              )}
             </div>
+            <label className="upload-badge" htmlFor="photo-upload">
+              <Camera size={20} />
+              <input 
+                id="photo-upload" 
+                type="file" 
+                hidden 
+                accept="image/*" 
+                onChange={handlePhotoUpload} 
+                ref={fileInputRef}
+              />
+            </label>
+          </div>
+          <h2 style={{margin: 0, fontSize: "24px"}}>{userData?.full_name}</h2>
+          <p style={{margin: "4px 0 0", opacity: 0.8, fontSize: "14px"}}>Agriculture Expert</p>
+        </div>
 
-            <div className="info-section">
-              <div className="info-row"><span className="info-label">Email</span><span className="info-value">{userData.email}</span></div>
-              <div className="info-row"><span className="info-label">Phone</span><span className="info-value">{userData.phone || "N/A"}</span></div>
-              <div className="info-row"><span className="info-label">Country</span><span className="info-value">{userData.country}</span></div>
-              <div className="info-row"><span className="info-label">City</span><span className="info-value">{userData.city}</span></div>
-              <div className="info-row"><span className="info-label">Joined</span><span className="info-value">{new Date(userData.created_at).toLocaleDateString()}</span></div>
+        <div className="profile-content">
+          {!isEditing ? (
+            <div style={{animation: "fadeIn 0.4s ease-out"}}>
+              <div className="expert-badge">
+                 <div>
+                   <div style={{fontWeight: "800", fontSize: "14px", color: "#166534"}}>Verification Status</div>
+                   <div style={{fontSize: "12px", color: "#15803d", marginTop: "2px"}}>Certified Agricultural Professional</div>
+                 </div>
+                 <div className="status-badge">CERTIFIED</div>
+              </div>
+
+              <div className="section-title">
+                Personal Details 
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  style={{background: "none", border: "none", color: "#3a8a3a", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px"}}
+                >
+                  <Edit3 size={16} /> Edit
+                </button>
+              </div>
+              <div className="info-card">
+                <div className="info-item">
+                  <div className="info-icon"><User size={20} /></div>
+                  <div className="info-text">
+                    <span className="info-label">Full Name</span>
+                    <span className="info-value">{userData?.full_name}</span>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <div className="info-icon"><Phone size={20} /></div>
+                  <div className="info-text">
+                    <span className="info-label">Phone Number</span>
+                    <span className="info-value">{userData?.phone || "Not provided"}</span>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <div className="info-icon"><MapPin size={20} /></div>
+                  <div className="info-text">
+                    <span className="info-label">City</span>
+                    <span className="info-value">{userData?.city || "Not provided"}</span>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <div className="info-icon"><Globe size={20} /></div>
+                  <div className="info-text">
+                    <span className="info-label">Country</span>
+                    <span className="info-value">{userData?.country || "Not provided"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="section-title">Security</div>
+              <button className="btn btn-outline" onClick={() => setShowPasswordSection(!showPasswordSection)}>
+                <Lock size={18} /> {showPasswordSection ? "Cancel Password Change" : "Change Password"}
+              </button>
+
+              {showPasswordSection && (
+                <form onSubmit={handleChangePassword} style={{marginTop: "16px", animation: "fadeIn 0.3s ease-out"}}>
+                  <div className="form-group">
+                    <label className="form-label">Current Password</label>
+                    <input className="form-input" type="password" required value={passForm.currentPassword} onChange={e => setPassForm({...passForm, currentPassword: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">New Password</label>
+                    <input className="form-input" type="password" required value={passForm.newPassword} onChange={e => setPassForm({...passForm, newPassword: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Confirm New Password</label>
+                    <input className="form-input" type="password" required value={passForm.confirmPassword} onChange={e => setPassForm({...passForm, confirmPassword: e.target.value})} />
+                  </div>
+                  <button className="btn btn-primary" type="submit" disabled={loading}>
+                    Update Password
+                  </button>
+                </form>
+              )}
+
+              <button className="btn btn-danger" onClick={handleLogout}>
+                <LogOut size={18} /> Logout Securely
+              </button>
             </div>
+          ) : (
+            <form onSubmit={handleUpdateProfile} style={{animation: "fadeIn 0.4s ease-out"}}>
+              <div className="section-title">Update Information</div>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input className="form-input" value={editForm.fullName} onChange={e => setEditForm({...editForm, fullName: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <input className="form-input" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">City</label>
+                <input className="form-input" value={editForm.city} onChange={e => setEditForm({...editForm, city: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Country</label>
+                <input className="form-input" value={editForm.country} onChange={e => setEditForm({...editForm, country: e.target.value})} />
+              </div>
+              
+              <div style={{display: "flex", gap: "10px", marginTop: "20px"}}>
+                <button className="btn btn-outline" type="button" style={{flex: 1}} onClick={() => setIsEditing(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-primary" type="submit" style={{flex: 2}} disabled={loading}>
+                  <Check size={18} /> Save Changes
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
 
-            <button className="logout-btn" onClick={handleLogout}>Logout</button>
+        <div className="bottom-nav">
+          <div className="nav-item" onClick={() => navigate("/expert-dashboard")}><span>🏠</span><span>Explore</span></div>
+          <div className="nav-item" onClick={() => navigate("/expert-queries")}><span>💬</span><span>Queries</span></div>
+          <div className="nav-item" onClick={() => navigate("/expert-articles")}><span>📝</span><span>Articles</span></div>
+          <div className="nav-item active"><span>👤</span><span>Profile</span></div>
+        </div>
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
+            </div>
           </div>
         )}
       </div>

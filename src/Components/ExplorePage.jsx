@@ -11,11 +11,17 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(initialFilter);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
 
   const handleAddToCart = async (productId) => {
     const buyerEmail = localStorage.getItem("userEmail");
     if (!buyerEmail) {
-      alert("Please login to add items to cart.");
+      showToast("Please login to add items to cart.", "error");
       return;
     }
 
@@ -25,7 +31,11 @@ export default function ExplorePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ buyerEmail, productId })
       });
-      if (response.ok) alert("Added to cart!");
+      if (response.ok) {
+        showToast("Added to cart! 🛒");
+      } else {
+        showToast("Failed to add to cart.", "error");
+      }
     } catch (err) {
       console.error("Cart error", err);
     }
@@ -183,6 +193,40 @@ export default function ExplorePage() {
         .nav-item.active {
           color: #2e8b57;
         }
+
+        .toast-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          width: 90%;
+          max-width: 320px;
+          animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-content {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 12px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .toast-success { color: #16a34a; border-left: 4px solid #16a34a; }
+        .toast-error { color: #ef4444; border-left: 4px solid #ef4444; }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translate(-50%, -20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
       `}</style>
 
       <div className="app">
@@ -321,6 +365,15 @@ export default function ExplorePage() {
             <span>Profile</span>
           </div>
         </div>
+
+        {toast.show && (
+          <div className="toast-container">
+            <div className={`toast-content toast-${toast.type}`}>
+              <span>{toast.type === "success" ? "✅" : "❌"}</span>
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

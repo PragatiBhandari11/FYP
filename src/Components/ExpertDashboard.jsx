@@ -14,6 +14,7 @@ const data = {
   ],
   tools: [
     { label: "Disease Reports", icon: "🌡️", path: "/expert-disease-reports" },
+    { label: "Farmer Chats", icon: "💬", path: "/expert-chats" },
     { label: "Write Article", icon: "📝", path: "/write-article" },
   ],
   questions: [
@@ -45,6 +46,7 @@ const data = {
   navItems: [
     { label: "Dashboard", icon: "📊", path: "/expert-dashboard" },
     { label: "Queries", icon: "❓", path: "/queries" },
+    { label: "Chats", icon: "💬", path: "/expert-chats" },
     { label: "Knowledge", icon: "📚", path: "/knowledge" },
     { label: "Profile", icon: "👤", path: "/expert-profile" },
   ],
@@ -61,6 +63,12 @@ const ExpertDashboard = () => {
   const [recentQueries, setRecentQueries] = React.useState([]);
   const [notifications, setNotifications] = React.useState([]);
   const [showNotifications, setShowNotifications] = React.useState(false);
+  const [toast, setToast] = React.useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+  };
 
   React.useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -108,7 +116,11 @@ const ExpertDashboard = () => {
     try {
       await fetch(`http://localhost:5000/api/notifications/${id}/read`, { method: "PUT" });
       setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: 1 } : n));
-    } catch (err) { console.error(err); }
+      showToast("Marked as read");
+    } catch (err) { 
+      console.error(err); 
+      showToast("Error updating notification", "error");
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -214,6 +226,15 @@ const ExpertDashboard = () => {
               ))
             )}
             <button onClick={() => setShowNotifications(false)} style={styles.closeBtn}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {toast.show && (
+        <div style={styles.toastContainer}>
+          <div style={{...styles.toastContent, ...styles[`toast${toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}`]}}>
+            <span>{toast.type === "success" ? "✅" : "❌"}</span>
+            {toast.message}
           </div>
         </div>
       )}
@@ -354,7 +375,33 @@ const styles = {
     borderRadius: "10px",
     fontWeight: "bold",
     cursor: "pointer",
-  }
+  },
+  toastContainer: {
+    position: "fixed",
+    top: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 10000,
+    width: "90%",
+    maxHeight: "320px",
+  },
+  toastContent: {
+    background: "rgba(255, 255, 255, 0.9)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    fontWeight: "600",
+    fontSize: "14px",
+    animation: "slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+  },
+  toastSuccess: { color: "#16a34a", borderLeft: "4px solid #16a34a" },
+  toastError: { color: "#ef4444", borderLeft: "4px solid #ef4444" },
 };
 
 export default ExpertDashboard;
