@@ -1,5 +1,5 @@
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import ExpertNavbar from "./ExpertNavbar";
 
 const CategoriesColors = {
   DISEASE: "#f87171", // red
@@ -88,10 +88,10 @@ const Queries = () => {
                 </div>
                 <p style={styles.queryTitle}>{q.description || "No description provided"}</p>
                 {q.image_url && (
-                  <img
-                    src={`http://localhost:5000${q.image_url}`}
-                    alt="Query"
-                    style={styles.queryImage}
+                  <img 
+                    src={`http://localhost:5000${q.image_url}`} 
+                    alt="Query" 
+                    style={styles.queryImage} 
                   />
                 )}
                 <div style={styles.footer}>
@@ -101,14 +101,14 @@ const Queries = () => {
                   </p>
                   <div style={styles.actions}>
                     <button style={styles.btnIgnore}>Ignore</button>
-                    <button
+                    <button 
                       style={styles.btnReply}
                       onClick={() => navigate(`/expert-disease-reports`)} // Link to report detail/response page
                     >
                       Reply
                     </button>
-                    <button
-                      style={{ ...styles.btnReply, background: "#1e3a8a" }} // Navy blue for chat
+                    <button 
+                      style={{...styles.btnReply, background: "#1e3a8a"}} // Navy blue for chat
                       onClick={() => navigate(`/chat/user/${q.farmer_email}`)}
                     >
                       💬 Chat
@@ -123,31 +123,23 @@ const Queries = () => {
         </div>
       )}
 
-      {/* Standardized Bottom Navigation (Inline) */}
-      <nav style={{
-        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", 
-        width: "390px", backgroundColor: "white", borderTop: "1px solid #ddd", 
-        display: "flex", justifyContent: "space-around", padding: "10px 0 15px", zIndex: 1000
-      }}>
-        <Link to="/expert-dashboard" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-          <div style={{ fontSize: "20px" }}>📊</div>
-          <div style={{ fontSize: "11px", fontWeight: "600" }}>Dashboard</div>
+      {/* BOTTOM NAVIGATION */}
+      <nav style={styles.navbar}>
+        <Link to="/expert-dashboard" style={styles.navItem}>
+          <div style={styles.navIcon}>📊</div>
+          <div style={styles.navLabel}>Dashboard</div>
         </Link>
-        <Link to="/queries" style={{ textDecoration: "none", color: "#3a8a3a", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-          <div style={{ fontSize: "20px" }}>❓</div>
-          <div style={{ fontSize: "11px", fontWeight: "600" }}>Queries</div>
+        <Link to="/queries" style={{ ...styles.navItem, color: "#3a8a3a" }}>
+          <div style={styles.navIcon}>❓</div>
+          <div style={styles.navLabel}>Queries</div>
         </Link>
-        <Link to="/expert-chats" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-          <div style={{ fontSize: "20px" }}>💬</div>
-          <div style={{ fontSize: "11px", fontWeight: "600" }}>Chats</div>
+        <Link to="/knowledge" style={styles.navItem}>
+          <div style={styles.navIcon}>📚</div>
+          <div style={styles.navLabel}>Knowledge</div>
         </Link>
-        <Link to="/knowledge" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-          <div style={{ fontSize: "20px" }}>📚</div>
-          <div style={{ fontSize: "11px", fontWeight: "600" }}>Knowledge</div>
-        </Link>
-        <Link to="/expert-profile" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-          <div style={{ fontSize: "20px" }}>👤</div>
-          <div style={{ fontSize: "11px", fontWeight: "600" }}>Profile</div>
+        <Link to="/expert-profile" style={styles.navItem}>
+          <div style={styles.navIcon}>👤</div>
+          <div style={styles.navLabel}>Profile</div>
         </Link>
       </nav>
     </div>

@@ -116,7 +116,7 @@ const SignUpPage = () => {
           background: #f8fafc;
           transition: 0.3s;
           box-sizing: border-box;
-        }
+   a     }
 
         .modern-input:focus, .modern-select:focus {
           outline: none;

@@ -15,7 +15,7 @@ router.post("/add", (req, res) => {
   const checkSql = "SELECT id, quantity FROM cart_items WHERE buyer_email = ? AND product_id = ?";
   db.query(checkSql, [buyerEmail, productId], (checkErr, results) => {
     if (checkErr) {
-      console.error("❌ Cart check error:", checkErr.message);
+      console.error(" Cart check error:", checkErr.message);
       return res.status(500).json({ message: "Database error" });
     }
 
@@ -61,7 +61,7 @@ router.get("/:email", (req, res) => {
 
   db.query(sql, [email], (err, results) => {
     if (err) {
-      console.error("❌ Cart Fetch error:", err.message);
+      console.error(" Cart Fetch error:", err.message);
       return res.status(500).json({ message: "Database error" });
     }
 

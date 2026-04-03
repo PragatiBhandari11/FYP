@@ -139,34 +139,6 @@ export default function ExpertDiseaseReports() {
             </div>
           ))
         )}
-
-        {/* Standardized Bottom Navigation (Inline) */}
-        <nav style={{
-          position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", 
-          width: "390px", backgroundColor: "white", borderTop: "1px solid #ddd", 
-          display: "flex", justifyContent: "space-around", padding: "10px 0 15px", zIndex: 1000
-        }}>
-          <Link to="/expert-dashboard" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-            <div style={{ fontSize: "20px" }}>📊</div>
-            <div style={{ fontSize: "11px", fontWeight: "600" }}>Dashboard</div>
-          </Link>
-          <Link to="/queries" style={{ textDecoration: "none", color: "#2e7d32", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-            <div style={{ fontSize: "20px" }}>❓</div>
-            <div style={{ fontSize: "11px", fontWeight: "600" }}>Queries</div>
-          </Link>
-          <Link to="/expert-chats" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-            <div style={{ fontSize: "20px" }}>💬</div>
-            <div style={{ fontSize: "11px", fontWeight: "600" }}>Chats</div>
-          </Link>
-          <Link to="/knowledge" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-            <div style={{ fontSize: "20px" }}>📚</div>
-            <div style={{ fontSize: "11px", fontWeight: "600" }}>Knowledge</div>
-          </Link>
-          <Link to="/expert-profile" style={{ textDecoration: "none", color: "#94a3b8", display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
-            <div style={{ fontSize: "20px" }}>👤</div>
-            <div style={{ fontSize: "11px", fontWeight: "600" }}>Profile</div>
-          </Link>
-        </nav>
       </div>
 
       {toast.show && (
