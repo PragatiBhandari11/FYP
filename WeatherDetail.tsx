@@ -27,6 +27,8 @@ import {
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import * as Location from 'expo-location';
+
 const { width } = Dimensions.get('window');
 
 export default function WeatherDetail() {
@@ -38,8 +40,24 @@ export default function WeatherDetail() {
 
   const fetchWeather = async () => {
     try {
-      const city = user?.city || 'Kathmandu';
-      const data = await api.get(`/weather/${city}`);
+      // 1. Try to get location
+      let coords = null;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          coords = loc.coords;
+        }
+      } catch (e) {}
+
+      // 2. Fetch data based on location or city fallback
+      let data;
+      if (coords) {
+        data = await api.get(`/weather/coords?lat=${coords.latitude}&lon=${coords.longitude}`);
+      } else {
+        const city = user?.city || 'Kathmandu';
+        data = await api.get(`/weather/${city}`);
+      }
       setWeather(data);
     } catch (error) {
       console.error(error);

@@ -11,7 +11,8 @@ import {
   ActivityIndicator, 
   Modal,
   Dimensions,
-  Platform
+  Platform,
+  TextInput
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -25,9 +26,17 @@ import {
   Users,
   ChevronRight,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  X,
+  TrendingUp,
+  Sprout,
+  Sun,
+  CloudRain,
+  Calendar
 } from 'lucide-react-native';
 import { UPLOADS_URL } from '../../constants/API';
+
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
@@ -54,6 +63,7 @@ interface Order {
   status: string;
   image_url: string;
   order_number: string;
+  buyer_name?: string;
 }
 
 interface Collab {
@@ -73,27 +83,48 @@ export default function FarmerDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [userName, setUserName] = useState(user?.fullName || '');
   const [stats, setStats] = useState({ earnings: 0, ordersCount: 0, productsCount: 0 });
-  const [weather, setWeather] = useState({ temp: '--', condition: 'Loading...', city: '' });
+  const [weather, setWeather] = useState({ temp: '--', condition: 'Fetching...', city: '' });
   const [data, setData] = useState<any>({
     recentOrders: [],
     demands: [],
     notifications: [],
     collabs: [],
     articles: [],
+    marketPrices: [],
+    harvestAlerts: [],
+    activeCrops: [],
+    advisory: null
   });
   const [showNotifs, setShowNotifs] = useState(false);
+  const [showAddCrop, setShowAddCrop] = useState(false);
+  const [newCrop, setNewCrop] = useState({ name: '', plantedDate: new Date().toISOString().split('T')[0] });
+  const [isSubmittingCrop, setIsSubmittingCrop] = useState(false);
 
   const fetchAllData = async () => {
     if (!user?.email) return;
     try {
-      const [uProfile, oData, pData, dData, nData, cData, aData] = await Promise.all([
+      // 1. Fetch Location first to make weather real
+      let coords = null;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          coords = loc.coords;
+        }
+      } catch (locErr) {
+        console.log("Location permission denied or failed.");
+      }
+
+      const [uProfile, oData, pData, dData, nData, cData, aData, hData, advData] = await Promise.all([
         api.get(`/user/${user.email}`).catch(() => ({})),
         api.get(`/orders/farmer/${user.email}`).catch(() => []),
         api.get(`/products/farmer/${user.email}`).catch(() => []),
         api.get('/demands').catch(() => []),
         api.get(`/notifications/${user.email}`).catch(() => []),
         api.get('/collaborations').catch(() => []),
-        api.get('/articles').catch(() => [])
+        api.get('/articles').catch(() => []),
+        api.get(`/harvest/alerts/${user.email}`).catch(() => []),
+        api.get(`/harvest/seasonal-advisory?city=${user.city || 'Kathmandu'}`).catch(() => null)
       ]);
 
       setUserName(uProfile.full_name || user.fullName || '');
@@ -108,26 +139,65 @@ export default function FarmerDashboard() {
         productsCount: (pData || []).length
       });
 
+      console.log(`🔔 Notifications synced for ${user.email}: ${nData?.length || 0} items`);
       setData({
-        recentOrders: (oData || []).slice(0, 5),
-        demands: dData || [],
-        notifications: nData || [],
-        collabs: cData || [],
-        articles: (aData || []).slice(0, 3),
+        recentOrders: Array.isArray(oData) ? oData.slice(0, 5) : [],
+        demands: Array.isArray(dData) ? dData : [],
+        notifications: Array.isArray(nData) ? nData : [],
+        collabs: Array.isArray(cData) ? cData : [],
+        articles: Array.isArray(aData) ? aData.slice(0, 3) : [],
+        marketPrices: [],
+        harvestAlerts: hData?.alerts || [],
+        activeCrops: hData?.crops || [],
+        advisory: advData || null
       });
 
-      const weatherCity = uProfile.city || user.city || 'kathmandu';
+      // 3. Fetch Market Prices separately
+      api.get('/market-prices').then(mpData => {
+        if (Array.isArray(mpData)) {
+          setData((prev: any) => ({ ...prev, marketPrices: mpData.slice(0, 8) }));
+        }
+      }).catch(() => {});
+
+      // 2. Fetch Weather using coords or city fallback
       try {
-        const wData = await api.get(`/weather/${weatherCity}`);
-        setWeather({ ...wData, city: weatherCity });
+        let wData;
+        if (coords) {
+          wData = await api.get(`/weather/coords?lat=${coords.latitude}&lon=${coords.longitude}`);
+        } else {
+          const weatherCity = uProfile.city || user.city || 'kathmandu';
+          wData = await api.get(`/weather/${weatherCity}`);
+        }
+        setWeather(wData);
       } catch (wErr) {
-        setWeather({ temp: '11', condition: 'Sunny', city: weatherCity.toLowerCase() });
+        setWeather({ temp: '24', condition: 'Sunny', city: (uProfile.city || 'local area').toLowerCase() });
       }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleRegisterCrop = async () => {
+    if (!newCrop.name) return Alert.alert("Error", "Please enter crop name");
+    setIsSubmittingCrop(true);
+    try {
+      await api.post('/harvest/register-crop', {
+        email: user?.email,
+        cropName: newCrop.name,
+        plantedDate: newCrop.plantedDate,
+        city: weather.city || 'Kathmandu'
+      });
+      Alert.alert("Success", "Crop added to tracking list! We'll alert you when it's harvest time.");
+      setShowAddCrop(false);
+      setNewCrop({ name: '', plantedDate: new Date().toISOString().split('T')[0] });
+      fetchAllData();
+    } catch (err) {
+      Alert.alert("Error", "Failed to register crop");
+    } finally {
+      setIsSubmittingCrop(false);
     }
   };
 
@@ -148,6 +218,17 @@ export default function FarmerDashboard() {
       fetchAllData();
     } catch (e) {}
   };
+  const markAsRead = async (id: number) => {
+    try {
+      await api.put(`/notifications/${id}/read`, {});
+      setData((prev: any) => ({
+        ...prev,
+        notifications: prev.notifications.map((n: any) => n.id === id ? { ...n, is_read: 1 } : n)
+      }));
+    } catch (e) {}
+  };
+
+  const unreadCount = data.notifications.filter((n: any) => !n.is_read).length;
 
   if (loading && !refreshing) {
     return (
@@ -176,7 +257,8 @@ export default function FarmerDashboard() {
               </View>
             </View>
             <TouchableOpacity style={styles.notifBtn} onPress={() => setShowNotifs(true)}>
-              <Bell size={22} color="#f59e0b" fill="#f59e0b" />
+              <Bell size={22} color={unreadCount > 0 ? "#ef4444" : "#f59e0b"} fill={unreadCount > 0 ? "#ef4444" : "#f59e0b"} />
+              {unreadCount > 0 && <View style={styles.notifBadgeSmall} />}
             </TouchableOpacity>
           </View>
 
@@ -207,14 +289,41 @@ export default function FarmerDashboard() {
               <View style={styles.iconBox}><ClipboardList size={20} color="#64748b" /></View>
               <Text style={styles.actionLabel}>View{'\n'}Orders</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(tabs)/products' as any)}>
+            <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/farmer/MyProducts' as any)}>
               <View style={styles.iconBox}><Tractor size={20} color={COLORS.primary} /></View>
-              <Text style={styles.actionLabel}>My{'\n'}Farm</Text>
+              <Text style={styles.actionLabel}>My\nFarm</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(tabs)/experts' as any)}>
               <View style={styles.iconBox}><User size={20} color="#1e293b" /></View>
               <Text style={styles.actionLabel}>Add{'\n'}Expert</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.actionItem} onPress={() => setShowAddCrop(true)}>
+              <View style={styles.iconBox}><Sprout size={20} color="#8b5cf6" /></View>
+              <Text style={styles.actionLabel}>Track{'\n'}Harvest</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Market Prices Strip */}
+          <View style={styles.marketStrip}>
+            <View style={styles.marketStripHeader}>
+              <TrendingUp size={16} color={COLORS.primary} />
+              <Text style={styles.marketStripTitle}>Live Kalimati Prices</Text>
+              <TouchableOpacity onPress={() => router.push('/buyer/ExplorePage' as any)}>
+                <Text style={styles.viewAllMini}>Trends</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.marketScroll}>
+              {loading ? (
+                <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 20 }} />
+              ) : (
+                data.marketPrices?.map((m: any, i: number) => (
+                  <View key={i} style={styles.marketItem}>
+                    <Text style={styles.marketName}>{m.name}</Text>
+                    <Text style={styles.marketPrice}>Rs {m.price}/{m.unit}</Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
           </View>
 
           <View style={styles.infoRow}>
@@ -236,6 +345,69 @@ export default function FarmerDashboard() {
             </TouchableOpacity>
           </View>
 
+          {/* Seasonal Advisory Widget */}
+          {data.advisory && (
+            <TouchableOpacity 
+              style={styles.advisoryCard} 
+              onPress={() => Alert.alert(`Monthly Advice (${data.advisory.month})`, data.advisory.summary)}
+            >
+              <View style={styles.advisoryIcon}>
+                <Calendar size={20} color="#0369a1" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.advisoryMonth}>{data.advisory.month} Advisory</Text>
+                <Text style={styles.advisorySummary} numberOfLines={1}>{data.advisory.summary}</Text>
+                <Text style={styles.advisoryAdvice}>{data.advisory.weatherAdvice}</Text>
+              </View>
+              <ChevronRight size={18} color="#94a3b8" />
+            </TouchableOpacity>
+          )}
+
+          {/* Harvest Alerts Section */}
+          {data.harvestAlerts.length > 0 && (
+            <View style={styles.harvestSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>🌾 Harvesting Recommendations</Text>
+              </View>
+              {data.harvestAlerts.map((alert: any, idx: number) => (
+                <View key={idx} style={[styles.harvestAlert, alert.isGoodWindow ? styles.alertSuccess : styles.alertWarning]}>
+                  <View style={styles.alertIconBox}>
+                    {alert.isGoodWindow ? <Sun size={20} color="#166534" /> : <CloudRain size={20} color="#991b1b" />}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.alertTitle}>{alert.cropName} - {alert.daysRemaining <= 0 ? 'READY' : `In ${alert.daysRemaining} days`}</Text>
+                    <Text style={styles.alertDesc}>{alert.message}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.divider} />
+
+          {/* Atomic Field Status (Precision Harvesting) */}
+          {data.activeCrops?.length > 0 && (
+            <View style={styles.atomicSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>🛰️ Atomic Field Status</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.atomicScroll}>
+                {data.activeCrops.map((crop: any, i: number) => (
+                  <View key={i} style={styles.atomicCard}>
+                    <Text style={styles.atomicCropName}>{crop.crop_name}</Text>
+                    <View style={styles.progressContainer}>
+                      <View style={[styles.progressBar, { width: `${crop.progress}%` }]} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={styles.atomicMeta}>{Math.round(crop.progress)}%</Text>
+                      <Text style={styles.atomicDate}>Est. {new Date(crop.expected_harvest_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           <View style={styles.divider} />
 
           <View style={styles.sectionHeader}>
@@ -253,10 +425,10 @@ export default function FarmerDashboard() {
                  <View key={o.id} style={styles.orderItem}>
                     <View style={styles.orderLeft}>
                       <Image source={{ uri: o.image_url ? `${UPLOADS_URL}${o.image_url}` : 'https://via.placeholder.com/150' }} style={styles.orderImg} />
-                      <View style={styles.orderInfo}>
-                         <Text style={styles.orderName}>{o.product_name}</Text>
-                         <Text style={styles.orderMeta}>{o.quantity} units • KLT-</Text>
-                         <Text style={styles.orderMeta}>{o.order_number}</Text>
+                       <View style={styles.orderInfo}>
+                          <Text style={styles.orderName}>{o.product_name}</Text>
+                          <Text style={styles.orderBuyer}>Buyer: {o.buyer_name || 'AgroBuyer'}</Text>
+                          <Text style={styles.orderMeta}>{o.quantity} units • {o.order_number}</Text>
                          <Text style={styles.orderPrice}>Rs{o.price_at_purchase * o.quantity}</Text>
                       </View>
                     </View>
@@ -326,6 +498,98 @@ export default function FarmerDashboard() {
           <View style={{ height: 100 }} />
         </ScrollView>
       </View>
+
+      {/* Notifications Modal */}
+      <Modal visible={showNotifs} animationType="slide" transparent>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowNotifs(false)}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Your Alerts</Text>
+              <TouchableOpacity onPress={() => setShowNotifs(false)}>
+                <X size={24} color={COLORS.textMain} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {data.notifications.length === 0 ? (
+                <Text style={styles.emptyNotifText}>No notifications yet.</Text>
+              ) : (
+                data.notifications.map((n: any) => (
+                  <TouchableOpacity 
+                    key={n.id} 
+                    style={[styles.notifItem, !n.is_read && styles.unreadNotif]} 
+                    onPress={() => !n.is_read && markAsRead(n.id)}
+                  >
+                    <View style={styles.notifHeader}>
+                      <Text style={styles.notifTitle}>{n.title}</Text>
+                      {n.type && (
+                        <View style={[styles.typeBadge, { backgroundColor: n.type === 'Demand' ? '#f59e0b' : '#3b82f6' }]}>
+                          <Text style={styles.typeBadgeText}>{n.type}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.notifMsg}>{n.message}</Text>
+                    <Text style={styles.notifTime}>{new Date(n.created_at).toLocaleString()}</Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Add Crop Modal */}
+      <Modal visible={showAddCrop} animationType="fade" transparent>
+        <View style={styles.modalOverlayCenter}>
+          <View style={styles.cropModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Track New Crop</Text>
+              <TouchableOpacity onPress={() => setShowAddCrop(false)}>
+                <X size={24} color={COLORS.textMain} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Crop Name (e.g. Rice, Tomato)</Text>
+              <View style={styles.inputBox}>
+                <Sprout size={18} color="#94a3b8" />
+                <TextInput 
+                  style={styles.input} 
+                  placeholder="Enter crop name"
+                  value={newCrop.name}
+                  onChangeText={(t: string) => setNewCrop({...newCrop, name: t})}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Planted Date (YYYY-MM-DD)</Text>
+              <View style={styles.inputBox}>
+                <Calendar size={18} color="#94a3b8" />
+                <TextInput 
+                  style={styles.input} 
+                  placeholder="2024-03-01"
+                  value={newCrop.plantedDate}
+                  onChangeText={(t: string) => setNewCrop({...newCrop, plantedDate: t})}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.submitBtn, isSubmittingCrop && { opacity: 0.7 }]} 
+              onPress={handleRegisterCrop}
+              disabled={isSubmittingCrop}
+            >
+              {isSubmittingCrop ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text style={styles.submitBtnText}>Start Tracking</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Re-importing Lucide icons that might be missing locally */}
     </View>
   );
 }
@@ -442,6 +706,51 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.textMain,
     textAlign: 'center',
+  },
+  marketStrip: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+  },
+  marketStripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  marketStripTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textMain,
+    flex: 1,
+  },
+  viewAllMini: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  marketScroll: {
+    gap: 12,
+  },
+  marketItem: {
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  marketName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textMain,
+  },
+  marketPrice: {
+    fontSize: 11,
+    color: COLORS.primary,
+    fontWeight: '800',
+    marginTop: 2,
   },
   infoRow: {
     flexDirection: 'row',
@@ -631,5 +940,263 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textMuted,
     lineHeight: 14,
+  },
+  notifBadgeSmall: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ef4444',
+    borderWidth: 1.5,
+    borderColor: '#e0efe4',
+  },
+  orderBuyer: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+    marginBottom: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalOverlayCenter: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  cropModalContent: {
+    backgroundColor: 'white',
+    borderRadius: 32,
+    padding: 24,
+    elevation: 20,
+  },
+  harvestSection: {
+    marginBottom: 24,
+  },
+  harvestAlert: {
+    flexDirection: 'row',
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 10,
+    alignItems: 'center',
+    gap: 12,
+  },
+  alertSuccess: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#dcfce7',
+  },
+  alertWarning: {
+    backgroundColor: '#fff1f2',
+    borderWidth: 1,
+    borderColor: '#ffe4e6',
+  },
+  alertIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  alertDesc: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  inputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    marginLeft: 12,
+    fontSize: 15,
+    color: COLORS.textMain,
+  },
+  submitBtn: {
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    borderRadius: 18,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  submitBtnText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  modalContent: {
+    height: '75%',
+    backgroundColor: 'white',
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  advisoryCard: {
+    backgroundColor: '#f0f9ff',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e0f2fe',
+  },
+  advisoryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#bae6fd',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  advisoryMonth: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0369a1',
+  },
+  advisorySummary: {
+    fontSize: 12,
+    color: COLORS.textMain,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  advisoryAdvice: {
+    fontSize: 11,
+    color: '#0284c7',
+    marginTop: 2,
+  },
+  atomicSection: {
+    marginBottom: 24,
+  },
+  atomicScroll: {
+    gap: 12,
+    paddingVertical: 12,
+  },
+  atomicCard: {
+    width: 140,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    elevation: 2,
+  },
+  atomicCropName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textMain,
+    marginBottom: 10,
+  },
+  progressContainer: {
+    height: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 3,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 3,
+  },
+  atomicMeta: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  atomicDate: {
+    fontSize: 10,
+    color: COLORS.textLight,
+    marginTop: 2,
+  },
+  notifItem: {
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#cbd5e1',
+  },
+  unreadNotif: {
+    backgroundColor: 'rgba(22, 163, 74, 0.05)',
+    borderLeftColor: COLORS.primary,
+  },
+  notifHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  notifTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  notifMsg: {
+    fontSize: 13,
+    color: COLORS.textMuted,
+    marginTop: 4,
+  },
+  notifTime: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 8,
+  },
+  emptyNotifText: {
+    textAlign: 'center',
+    padding: 40,
+    color: COLORS.textLight,
+    fontStyle: 'italic',
   },
 });

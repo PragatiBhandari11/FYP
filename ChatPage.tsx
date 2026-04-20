@@ -3,14 +3,14 @@ import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Image,
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { api } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowLeft, Send, Image as ImageIcon, X, User } from 'lucide-react-native';
+import { ArrowLeft, Send, Image as ImageIcon, X, User, Phone, Video } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { appendImageToFormData } from '../../utils/upload';
 import { API_URL, UPLOADS_URL } from '../../constants/API';
 
 export default function ChatPage() {
   const router = useRouter();
-  const { type, id } = useLocalSearchParams(); // type: 'collab' or 'user', id: email or numeric ID
+  const { type, id } = useLocalSearchParams();
   const { user: currentUser } = useAuth();
   
   const [messages, setMessages] = useState<any[]>([]);
@@ -21,6 +21,17 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const startCall = (mode: 'audio' | 'video') => {
+    router.push({
+      pathname: '/farmer/CallScreen',
+      params: { 
+        name: recipient?.name || id, 
+        mode: mode,
+        id: id
+      }
+    } as any);
+  };
 
   const fetchRecipient = async () => {
     try {
@@ -123,7 +134,14 @@ export default function ChatPage() {
           <Text style={styles.recipientName}>{recipient?.name || '...'}</Text>
           <Text style={styles.recipientStatus}>{recipient?.sub || 'Connecting...'}</Text>
         </View>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerActions}>
+           <TouchableOpacity onPress={() => startCall('audio')} style={styles.headerIconBtn}>
+             <Phone size={20} color="#1e7d4f" />
+           </TouchableOpacity>
+           <TouchableOpacity onPress={() => startCall('video')} style={styles.headerIconBtn}>
+             <Video size={22} color="#1e7d4f" />
+           </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView 
@@ -222,6 +240,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#1e7d4f',
     fontWeight: '700',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chatArea: {
     flex: 1,
